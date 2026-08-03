@@ -1,6 +1,10 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// 🎯 FIX: Lock internal resolution so camera calculations work properly
+canvas.width = 960;
+canvas.height = 540;
+
 // UI Elements
 const levelTitleUI = document.getElementById('level-title');
 const coinCounterUI = document.getElementById('coin-counter');
@@ -103,7 +107,9 @@ let isGameWon = false;
 let isPaused = false;
 let screenShake = 0;
 let bgTimer = 0;
-let cameraX = 0; // Dynamic Camera Offset
+
+// 🎥 SCROLLING CAMERA VARIABLE
+let cameraX = 0;
 
 // Skins
 const SKINS = [
@@ -165,7 +171,7 @@ function loadLevel(levelNum) {
     
     checkpoint = { x: 50, y: 350 };
     respawnPlayer();
-    cameraX = 0;
+    cameraX = 0; // Reset camera on load
 
     currentTheme = THEMES[(levelNum - 1) % THEMES.length];
     levelTitleUI.innerText = `Stage ${levelNum} / ${TOTAL_LEVELS}`;
@@ -175,20 +181,20 @@ function loadLevel(levelNum) {
 
     if (levelNum <= 5) {
         pWidth = 120 - (levelNum * 4);
-        gap = 50 + (levelNum * 4);
-        totalObstacles = 4 + Math.floor(levelNum * 0.3);
+        gap = 60 + (levelNum * 4);
+        totalObstacles = 5 + Math.floor(levelNum * 0.3);
         allowCrumbling = false; allowConveyor = false; allowLasers = false;
         moveSpeedMult = 0.8;
     } else if (levelNum <= 12) {
         pWidth = 95 - ((levelNum - 5) * 3);
-        gap = 75 + ((levelNum - 5) * 4);
-        totalObstacles = 6 + Math.floor((levelNum - 5) * 0.5);
+        gap = 85 + ((levelNum - 5) * 4);
+        totalObstacles = 7 + Math.floor((levelNum - 5) * 0.5);
         allowCrumbling = true; allowConveyor = true; allowLasers = levelNum >= 9;
         moveSpeedMult = 1.3;
     } else {
-        pWidth = 65 - Math.min((levelNum - 12) * 2, 20);
-        gap = 105 + Math.min((levelNum - 12) * 3, 25);
-        totalObstacles = 8 + Math.floor((levelNum - 12) * 0.5);
+        pWidth = 70 - Math.min((levelNum - 12) * 2, 20);
+        gap = 110 + Math.min((levelNum - 12) * 3, 25);
+        totalObstacles = 9 + Math.floor((levelNum - 12) * 0.5);
         allowCrumbling = true; allowConveyor = true; allowLasers = true;
         moveSpeedMult = 2.0;
     }
@@ -250,9 +256,9 @@ function loadLevel(levelNum) {
         }
     }
 
-    const lastX = currentX + 130;
-    platforms.push({ x: lastX, y: currentY, w: 130, h: 200, type: 'normal' });
-    exitDoor = { x: lastX + 45, y: currentY - 65, w: 45, h: 65 };
+    const lastX = currentX + 140;
+    platforms.push({ x: lastX, y: currentY, w: 140, h: 200, type: 'normal' });
+    exitDoor = { x: lastX + 50, y: currentY - 65, w: 45, h: 65 };
 }
 
 function respawnPlayer() {
@@ -382,10 +388,16 @@ function update() {
     player.x += player.vx;
     player.y += player.vy;
 
-    // Smooth Camera Following
-    let targetCameraX = player.x - canvas.width / 3;
+    // 🎥 SCROLLING CAMERA TRACKING LOGIC
+    const maxScrollX = Math.max(0, (exitDoor.x + exitDoor.w + 60) - canvas.width);
+    let targetCameraX = player.x - (canvas.width / 3);
+    
+    // Smooth interpolating camera movement
     cameraX += (targetCameraX - cameraX) * 0.1;
-    if (cameraX < 0) cameraX = 0; // Don't scroll past start boundary
+    
+    // Clamp bounds so screen doesn't scroll before start or past finish
+    if (cameraX < 0) cameraX = 0;
+    if (cameraX > maxScrollX) cameraX = maxScrollX;
 
     player.scaleX += (1 - player.scaleX) * 0.15;
     player.scaleY += (1 - player.scaleY) * 0.15;
@@ -508,7 +520,7 @@ function drawBackground() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-    const offset = (cameraX * 0.1) % 400;
+    const offset = (cameraX * 0.2) % 400; // Smooth parallax background shift
     ctx.beginPath();
     ctx.moveTo(0 - offset, 540);
     ctx.lineTo(120 - offset, 300); ctx.lineTo(320 - offset, 540);
@@ -555,6 +567,7 @@ function drawTCharacter(x, y) {
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    // Draw non-scrolling sky background
     drawBackground();
 
     ctx.save();
@@ -563,8 +576,8 @@ function draw() {
         ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
     }
 
-    // Apply Camera Translation
-    ctx.translate(-cameraX, 0);
+    // 🎥 SCROLL WORLD BY CAMERA OFFSET
+    ctx.translate(-Math.floor(cameraX), 0);
 
     platforms.forEach(p => {
         if (p.type === 'crumbling' && p.van && p.van.destroyed) return;
@@ -626,6 +639,7 @@ function draw() {
         ctx.beginPath(); ctx.moveTo(l.cx, l.cy); ctx.lineTo(lx, ly); ctx.stroke();
     });
 
+    // Exit Door
     ctx.fillStyle = '#f59e0b';
     ctx.fillRect(exitDoor.x, exitDoor.y, exitDoor.w, exitDoor.h);
     ctx.fillStyle = '#ffffff';
@@ -667,7 +681,7 @@ coinCounterUI.innerText = `🪙 ${coins}`;
 loadLevel(currentLevel);
 gameLoop();
 
-// 📱 UNIVERSAL MOBILE CONTROLS
+// 📱 UNIVERSAL MOBILE TOUCH CONTROLS
 function setupMobileControls() {
     const btnLeft = document.getElementById('btn-left');
     const btnRight = document.getElementById('btn-right');
