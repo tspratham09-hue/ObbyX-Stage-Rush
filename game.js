@@ -103,6 +103,7 @@ let isGameWon = false;
 let isPaused = false;
 let screenShake = 0;
 let bgTimer = 0;
+let cameraX = 0; // Dynamic Camera Offset
 
 // Skins
 const SKINS = [
@@ -164,6 +165,7 @@ function loadLevel(levelNum) {
     
     checkpoint = { x: 50, y: 350 };
     respawnPlayer();
+    cameraX = 0;
 
     currentTheme = THEMES[(levelNum - 1) % THEMES.length];
     levelTitleUI.innerText = `Stage ${levelNum} / ${TOTAL_LEVELS}`;
@@ -259,7 +261,6 @@ function respawnPlayer() {
     player.vx = 0; player.vy = 0;
 }
 
-// Pure Jump Physics Logic
 function triggerJump() {
     if (player.jumpsLeft > 0 && !isPaused && !isStartMenu) {
         player.vy = player.jumpForce;
@@ -271,7 +272,6 @@ function triggerJump() {
     }
 }
 
-// Start Game Handler
 startGameBtn.onclick = () => {
     initAudio();
     isStartMenu = false;
@@ -279,7 +279,6 @@ startGameBtn.onclick = () => {
     startTime = Date.now();
 };
 
-// Keyboard Listeners
 window.addEventListener('keydown', (e) => {
     initAudio();
     const k = e.key.toLowerCase();
@@ -382,6 +381,11 @@ function update() {
     player.vx *= FRICTION;
     player.x += player.vx;
     player.y += player.vy;
+
+    // Smooth Camera Following
+    let targetCameraX = player.x - canvas.width / 3;
+    cameraX += (targetCameraX - cameraX) * 0.1;
+    if (cameraX < 0) cameraX = 0; // Don't scroll past start boundary
 
     player.scaleX += (1 - player.scaleX) * 0.15;
     player.scaleY += (1 - player.scaleY) * 0.15;
@@ -504,7 +508,7 @@ function drawBackground() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-    const offset = player.x * 0.05;
+    const offset = (cameraX * 0.1) % 400;
     ctx.beginPath();
     ctx.moveTo(0 - offset, 540);
     ctx.lineTo(120 - offset, 300); ctx.lineTo(320 - offset, 540);
@@ -551,12 +555,16 @@ function drawTCharacter(x, y) {
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
+    drawBackground();
+
     ctx.save();
+
     if (screenShake > 0) {
         ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
     }
 
-    drawBackground();
+    // Apply Camera Translation
+    ctx.translate(-cameraX, 0);
 
     platforms.forEach(p => {
         if (p.type === 'crumbling' && p.van && p.van.destroyed) return;
@@ -659,9 +667,7 @@ coinCounterUI.innerText = `🪙 ${coins}`;
 loadLevel(currentLevel);
 gameLoop();
 
-// =======================================================
-// 📱 UNIVERSAL MOBILE CONTROLS (IOS & ANDROID COMPATIBLE)
-// =======================================================
+// 📱 UNIVERSAL MOBILE CONTROLS
 function setupMobileControls() {
     const btnLeft = document.getElementById('btn-left');
     const btnRight = document.getElementById('btn-right');
@@ -683,36 +689,30 @@ function setupMobileControls() {
             if (onPressEnd) onPressEnd();
         };
 
-        // Pointer Events (Unified handler for modern iOS, Android, and tablets)
         element.addEventListener('pointerdown', handleStart, { passive: false });
         element.addEventListener('pointerup', handleEnd, { passive: false });
         element.addEventListener('pointercancel', handleEnd, { passive: false });
 
-        // Touch event fallback
         element.addEventListener('touchstart', handleStart, { passive: false });
         element.addEventListener('touchend', handleEnd, { passive: false });
     }
 
-    // Move Left
     attachButtonEvent(btnLeft, 
         () => { keys['a'] = true; keys['arrowleft'] = true; }, 
         () => { keys['a'] = false; keys['arrowleft'] = false; }
     );
 
-    // Move Right
     attachButtonEvent(btnRight, 
         () => { keys['d'] = true; keys['arrowright'] = true; }, 
         () => { keys['d'] = false; keys['arrowright'] = false; }
     );
 
-    // Jump Button
     attachButtonEvent(btnJump, 
         () => { triggerJump(); }, 
         null
     );
 }
 
-// Bind controls immediately if DOM is ready, or when loaded
 if (document.readyState === 'loading') {
     window.addEventListener('DOMContentLoaded', setupMobileControls);
 } else {
