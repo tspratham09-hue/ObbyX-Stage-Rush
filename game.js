@@ -679,7 +679,22 @@ window.addEventListener('load', () => {
     btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); keys['d'] = true; keys['ArrowRight'] = true; });
     btnRight.addEventListener('touchend', (e) => { e.preventDefault(); keys['d'] = false; keys['ArrowRight'] = false; });
 
-    // Simulate Jump Key (Space, W, or ArrowUp)
-    btnJump.addEventListener('touchstart', (e) => { e.preventDefault(); keys[' '] = true; keys['w'] = true; keys['ArrowUp'] = true; });
-    btnJump.addEventListener('touchend', (e) => { e.preventDefault(); keys[' '] = false; keys['w'] = false; keys['ArrowUp'] = false; });
+    // Simulate Jump Key (Catch-all for Space, w, W, ArrowUp)
+    btnJump.addEventListener('touchstart', (e) => { 
+        e.preventDefault(); 
+        keys[' '] = true; 
+        keys['w'] = true; 
+        keys['W'] = true;
+        keys['ArrowUp'] = true; 
+        keys['Space'] = true;
+    });
+    
+    btnJump.addEventListener('touchend', (e) => { 
+        e.preventDefault(); 
+        keys[' '] = false; 
+        keys['w'] = false; 
+        keys['W'] = false;
+        keys['ArrowUp'] = false; 
+        keys['Space'] = false;
+    });
 });
