@@ -662,3 +662,24 @@ loadProgress();
 coinCounterUI.innerText = `🪙 ${coins}`;
 loadLevel(currentLevel);
 gameLoop();
+
+// --- MOBILE TOUCH CONTROLS ---
+window.addEventListener('load', () => {
+    const btnLeft = document.getElementById('btn-left');
+    const btnRight = document.getElementById('btn-right');
+    const btnJump = document.getElementById('btn-jump');
+
+    if (!btnLeft || !btnRight || !btnJump) return;
+
+    // Simulate Left Key (A or ArrowLeft)
+    btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); keys['a'] = true; keys['ArrowLeft'] = true; });
+    btnLeft.addEventListener('touchend', (e) => { e.preventDefault(); keys['a'] = false; keys['ArrowLeft'] = false; });
+
+    // Simulate Right Key (D or ArrowRight)
+    btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); keys['d'] = true; keys['ArrowRight'] = true; });
+    btnRight.addEventListener('touchend', (e) => { e.preventDefault(); keys['d'] = false; keys['ArrowRight'] = false; });
+
+    // Simulate Jump Key (Space, W, or ArrowUp)
+    btnJump.addEventListener('touchstart', (e) => { e.preventDefault(); keys[' '] = true; keys['w'] = true; keys['ArrowUp'] = true; });
+    btnJump.addEventListener('touchend', (e) => { e.preventDefault(); keys[' '] = false; keys['w'] = false; keys['ArrowUp'] = false; });
+});

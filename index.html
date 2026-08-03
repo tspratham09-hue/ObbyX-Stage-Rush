@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ObbyX: Stage Rush</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -47,7 +47,17 @@
         </div>
 
         <canvas id="gameCanvas" width="960" height="540"></canvas>
+
+        <!-- 📱 Mobile Touch Controls -->
+        <div id="mobile-controls">
+            <div class="dpad">
+                <button id="btn-left">◀</button>
+                <button id="btn-right">▶</button>
+            </div>
+            <button id="btn-jump">JUMP</button>
+        </div>
     </div>
+    
     <script src="game.js"></script>
 </body>
 </html>
