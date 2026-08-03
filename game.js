@@ -261,6 +261,20 @@ function respawnPlayer() {
     player.vx = 0; player.vy = 0;
 }
 
+// ==========================================
+// NEW JUMP FUNCTION (Fixes Mobile Jumping)
+// ==========================================
+function playerJump() {
+    if (player.jumpsLeft > 0 && !isPaused && !isStartMenu) {
+        player.vy = player.jumpForce;
+        player.jumpsLeft--;
+        player.grounded = false;
+        player.scaleX = 0.7; player.scaleY = 1.3;
+        playSFX('jump');
+        spawnParticles(player.x + 14, player.y + 35, 6, '#cbd5e1', 'dust');
+    }
+}
+
 // Start Game Handler
 startGameBtn.onclick = () => {
     isStartMenu = false;
@@ -274,16 +288,11 @@ window.addEventListener('keydown', (e) => {
     const k = e.key.toLowerCase();
     keys[k] = true;
 
+    // Trigger the new jump function when keyboard is pressed
     if (e.code === 'Space' || k === 'w' || e.code === 'ArrowUp') {
-        if (player.jumpsLeft > 0 && !isPaused && !isStartMenu) {
-            player.vy = player.jumpForce;
-            player.jumpsLeft--;
-            player.grounded = false;
-            player.scaleX = 0.7; player.scaleY = 1.3;
-            playSFX('jump');
-            spawnParticles(player.x + 14, player.y + 35, 6, '#cbd5e1', 'dust');
-        }
+        playerJump(); 
     }
+    
     if (k === 'r') respawnPlayer();
     if (k === 's') toggleModal(shopModal, renderShop);
     if (k === 'l') toggleModal(levelModal, renderLevelGrid);
@@ -663,7 +672,9 @@ coinCounterUI.innerText = `🪙 ${coins}`;
 loadLevel(currentLevel);
 gameLoop();
 
-// --- MOBILE TOUCH CONTROLS ---
+// =========================================
+// 📱 MOBILE TOUCH CONTROLS
+// =========================================
 window.addEventListener('load', () => {
     const btnLeft = document.getElementById('btn-left');
     const btnRight = document.getElementById('btn-right');
@@ -671,39 +682,18 @@ window.addEventListener('load', () => {
 
     if (!btnLeft || !btnRight || !btnJump) return;
 
-    // Simulate Left Key (A or ArrowLeft)
-    btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); keys['a'] = true; keys['ArrowLeft'] = true; });
-    btnLeft.addEventListener('touchend', (e) => { e.preventDefault(); keys['a'] = false; keys['ArrowLeft'] = false; });
+    // Simulate Left Key
+    btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); keys['a'] = true; keys['arrowleft'] = true; });
+    btnLeft.addEventListener('touchend', (e) => { e.preventDefault(); keys['a'] = false; keys['arrowleft'] = false; });
 
-    // Simulate Right Key (D or ArrowRight)
-    btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); keys['d'] = true; keys['ArrowRight'] = true; });
-    btnRight.addEventListener('touchend', (e) => { e.preventDefault(); keys['d'] = false; keys['ArrowRight'] = false; });
+    // Simulate Right Key
+    btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); keys['d'] = true; keys['arrowright'] = true; });
+    btnRight.addEventListener('touchend', (e) => { e.preventDefault(); keys['d'] = false; keys['arrowright'] = false; });
 
-    // Simulate Jump Key (Fires actual keyboard events)
+    // Simulate Jump Key by triggering the playerJump function directly!
     btnJump.addEventListener('touchstart', (e) => { 
         e.preventDefault(); 
-        
-        // 1. Update the array (just in case)
-        keys[' '] = true; 
-        keys['w'] = true; 
-        keys['ArrowUp'] = true; 
-
-        // 2. Fire real keyboard 'keydown' events to trick the game
-        window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space', keyCode: 32, bubbles: true }));
-        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'w', code: 'KeyW', keyCode: 87, bubbles: true }));
-        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', code: 'ArrowUp', keyCode: 38, bubbles: true }));
-    });
-    
-    btnJump.addEventListener('touchend', (e) => { 
-        e.preventDefault(); 
-        
-        keys[' '] = false; 
-        keys['w'] = false; 
-        keys['ArrowUp'] = false; 
-
-        // Fire real keyboard 'keyup' events
-        window.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', code: 'Space', keyCode: 32, bubbles: true }));
-        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'w', code: 'KeyW', keyCode: 87, bubbles: true }));
-        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowUp', code: 'ArrowUp', keyCode: 38, bubbles: true }));
+        initAudio(); // Required to unlock sound on mobile browsers
+        playerJump(); 
     });
 });
