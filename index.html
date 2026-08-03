@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ObbyX: Stage Rush</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <div id="ui-overlay">
+            <div class="stats-bar">
+                <span id="level-title">Stage 1 / 20</span>
+                <span id="coin-counter">🪙 0</span>
+                <span id="death-counter">☠️ 0</span>
+                <span id="timer-display">⏱️ 00:00</span>
+            </div>
+            <div id="theme-name">Theme: Grassland</div>
+            <p class="controls">A/D: Move | Space/W: Jump | R: Respawn | S: Shop | L: Level Select | M: Mute | ESC: Pause</p>
+        </div>
+
+        <!-- Start Screen Modal -->
+        <div id="start-modal" class="modal">
+            <h1 class="main-logo">OBBYX</h1>
+            <h3 class="sub-logo">STAGE RUSH</h3>
+            <button class="menu-btn start-btn" id="start-game-btn">PLAY GAME</button>
+        </div>
+
+        <!-- Shop Modal -->
+        <div id="shop-modal" class="modal hidden">
+            <h2>Skins Shop</h2>
+            <div id="shop-items"></div>
+            <button class="menu-btn" id="close-shop-btn">Back to Game</button>
+        </div>
+
+        <!-- Level Select Modal -->
+        <div id="level-modal" class="modal hidden">
+            <h2>Select Stage</h2>
+            <div id="level-grid"></div>
+            <button class="menu-btn" id="close-level-btn">Back to Game</button>
+        </div>
+
+        <!-- Pause Overlay -->
+        <div id="pause-modal" class="modal hidden">
+            <h2>Game Paused</h2>
+            <button class="menu-btn" id="resume-btn">Resume</button>
+        </div>
+
+        <canvas id="gameCanvas" width="960" height="540"></canvas>
+    </div>
+    <script src="game.js"></script>
+</body>
+</html>
