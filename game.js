@@ -679,22 +679,31 @@ window.addEventListener('load', () => {
     btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); keys['d'] = true; keys['ArrowRight'] = true; });
     btnRight.addEventListener('touchend', (e) => { e.preventDefault(); keys['d'] = false; keys['ArrowRight'] = false; });
 
-    // Simulate Jump Key (Catch-all for Space, w, W, ArrowUp)
+    // Simulate Jump Key (Fires actual keyboard events)
     btnJump.addEventListener('touchstart', (e) => { 
         e.preventDefault(); 
+        
+        // 1. Update the array (just in case)
         keys[' '] = true; 
         keys['w'] = true; 
-        keys['W'] = true;
         keys['ArrowUp'] = true; 
-        keys['Space'] = true;
+
+        // 2. Fire real keyboard 'keydown' events to trick the game
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space', keyCode: 32, bubbles: true }));
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'w', code: 'KeyW', keyCode: 87, bubbles: true }));
+        window.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowUp', code: 'ArrowUp', keyCode: 38, bubbles: true }));
     });
     
     btnJump.addEventListener('touchend', (e) => { 
         e.preventDefault(); 
+        
         keys[' '] = false; 
         keys['w'] = false; 
-        keys['W'] = false;
         keys['ArrowUp'] = false; 
-        keys['Space'] = false;
+
+        // Fire real keyboard 'keyup' events
+        window.dispatchEvent(new KeyboardEvent('keyup', { key: ' ', code: 'Space', keyCode: 32, bubbles: true }));
+        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'w', code: 'KeyW', keyCode: 87, bubbles: true }));
+        window.dispatchEvent(new KeyboardEvent('keyup', { key: 'ArrowUp', code: 'ArrowUp', keyCode: 38, bubbles: true }));
     });
 });
