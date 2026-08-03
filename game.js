@@ -28,6 +28,9 @@ let isMuted = false;
 
 function initAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
 }
 
 function playSFX(type) {
@@ -143,7 +146,6 @@ const THEMES = [
 ];
 let currentTheme = THEMES[0];
 
-// Particle Spawner
 function spawnParticles(x, y, count, color, type = 'dust') {
     for (let i = 0; i < count; i++) {
         particles.push({
@@ -157,7 +159,6 @@ function spawnParticles(x, y, count, color, type = 'dust') {
     }
 }
 
-// Stage Generator with Easy, Medium & Hard Tier Progression
 function loadLevel(levelNum) {
     platforms = []; hazards = []; coinsList = []; checkpointsList = []; lasers = [];
     
@@ -171,21 +172,18 @@ function loadLevel(levelNum) {
     let pWidth, gap, totalObstacles, allowCrumbling, allowConveyor, allowLasers, moveSpeedMult;
 
     if (levelNum <= 5) {
-        // EASY TIER (1 - 5)
         pWidth = 120 - (levelNum * 4);
         gap = 50 + (levelNum * 4);
         totalObstacles = 4 + Math.floor(levelNum * 0.3);
         allowCrumbling = false; allowConveyor = false; allowLasers = false;
         moveSpeedMult = 0.8;
     } else if (levelNum <= 12) {
-        // MEDIUM TIER (6 - 12)
         pWidth = 95 - ((levelNum - 5) * 3);
         gap = 75 + ((levelNum - 5) * 4);
         totalObstacles = 6 + Math.floor((levelNum - 5) * 0.5);
         allowCrumbling = true; allowConveyor = true; allowLasers = levelNum >= 9;
         moveSpeedMult = 1.3;
     } else {
-        // HARD TIER (13 - 20)
         pWidth = 65 - Math.min((levelNum - 12) * 2, 20);
         gap = 105 + Math.min((levelNum - 12) * 3, 25);
         totalObstacles = 8 + Math.floor((levelNum - 12) * 0.5);
@@ -261,10 +259,8 @@ function respawnPlayer() {
     player.vx = 0; player.vy = 0;
 }
 
-// ==========================================
-// NEW JUMP FUNCTION (Fixes Mobile Jumping)
-// ==========================================
-function playerJump() {
+// Pure Jump Physics Logic
+function triggerJump() {
     if (player.jumpsLeft > 0 && !isPaused && !isStartMenu) {
         player.vy = player.jumpForce;
         player.jumpsLeft--;
@@ -277,20 +273,20 @@ function playerJump() {
 
 // Start Game Handler
 startGameBtn.onclick = () => {
+    initAudio();
     isStartMenu = false;
     startModal.classList.add('hidden');
     startTime = Date.now();
 };
 
-// Controls
+// Keyboard Listeners
 window.addEventListener('keydown', (e) => {
     initAudio();
     const k = e.key.toLowerCase();
     keys[k] = true;
 
-    // Trigger the new jump function when keyboard is pressed
     if (e.code === 'Space' || k === 'w' || e.code === 'ArrowUp') {
-        playerJump(); 
+        triggerJump(); 
     }
     
     if (k === 'r') respawnPlayer();
@@ -302,7 +298,6 @@ window.addEventListener('keydown', (e) => {
 
 window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
 
-// Modal Interface Controllers
 function toggleModal(modal, renderFunc) {
     if (isStartMenu) return;
     const isHidden = modal.classList.contains('hidden');
@@ -376,7 +371,7 @@ function renderLevelGrid() {
     }
 }
 
-// Engine Update
+// Engine Loop Update
 function update() {
     if (isStartMenu || isGameWon || isPaused) return;
 
@@ -427,7 +422,6 @@ function update() {
         }
     });
 
-    // Hazards
     hazards.forEach(h => {
         if (player.x + player.width > h.x && player.x < h.x + h.w &&
             player.y + player.height > h.y && player.y < h.y + h.h) {
@@ -435,7 +429,6 @@ function update() {
         }
     });
 
-    // Checkpoint
     checkpointsList.forEach(cp => {
         if (!cp.reached && player.x + player.width > cp.x && player.x < cp.x + cp.w &&
             player.y + player.height > cp.y && player.y < cp.y + cp.h) {
@@ -446,7 +439,6 @@ function update() {
         }
     });
 
-    // Coins
     coinsList.forEach(c => {
         if (!c.collected && Math.hypot((player.x + 14) - c.x, (player.y + 19) - c.y) < 22) {
             c.collected = true;
@@ -458,7 +450,6 @@ function update() {
         }
     });
 
-    // Lasers
     lasers.forEach(l => {
         l.angle += l.speed;
         let lx = l.cx + Math.cos(l.angle) * l.length;
@@ -468,7 +459,6 @@ function update() {
 
     if (player.y > canvas.height + 60) handleDeath();
 
-    // Stage Clear Trigger
     if (player.x + player.width > exitDoor.x && player.x < exitDoor.x + exitDoor.w &&
         player.y + player.height > exitDoor.y && player.y < exitDoor.y + exitDoor.h) {
         if (currentLevel < TOTAL_LEVELS) {
@@ -504,7 +494,6 @@ function handleDeath() {
     respawnPlayer();
 }
 
-// Visual Background Render
 function drawBackground() {
     bgTimer += 0.03;
 
@@ -559,7 +548,6 @@ function drawTCharacter(x, y) {
     ctx.restore();
 }
 
-// Main Render Frame
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -647,7 +635,6 @@ function draw() {
 
     ctx.restore();
 
-    // Victory Screen
     if (isGameWon) {
         ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -672,28 +659,62 @@ coinCounterUI.innerText = `🪙 ${coins}`;
 loadLevel(currentLevel);
 gameLoop();
 
-// =========================================
-// 📱 MOBILE TOUCH CONTROLS
-// =========================================
-window.addEventListener('load', () => {
+// =======================================================
+// 📱 UNIVERSAL MOBILE CONTROLS (IOS & ANDROID COMPATIBLE)
+// =======================================================
+function setupMobileControls() {
     const btnLeft = document.getElementById('btn-left');
     const btnRight = document.getElementById('btn-right');
     const btnJump = document.getElementById('btn-jump');
 
     if (!btnLeft || !btnRight || !btnJump) return;
 
-    // Simulate Left Key
-    btnLeft.addEventListener('touchstart', (e) => { e.preventDefault(); keys['a'] = true; keys['arrowleft'] = true; });
-    btnLeft.addEventListener('touchend', (e) => { e.preventDefault(); keys['a'] = false; keys['arrowleft'] = false; });
+    function attachButtonEvent(element, onPressStart, onPressEnd) {
+        element.style.touchAction = 'none';
 
-    // Simulate Right Key
-    btnRight.addEventListener('touchstart', (e) => { e.preventDefault(); keys['d'] = true; keys['arrowright'] = true; });
-    btnRight.addEventListener('touchend', (e) => { e.preventDefault(); keys['d'] = false; keys['arrowright'] = false; });
+        const handleStart = (e) => {
+            if (e.cancelable) e.preventDefault();
+            initAudio();
+            onPressStart();
+        };
 
-    // Simulate Jump Key by triggering the playerJump function directly!
-    btnJump.addEventListener('touchstart', (e) => { 
-        e.preventDefault(); 
-        initAudio(); // Required to unlock sound on mobile browsers
-        playerJump(); 
-    });
-});
+        const handleEnd = (e) => {
+            if (e.cancelable) e.preventDefault();
+            if (onPressEnd) onPressEnd();
+        };
+
+        // Pointer Events (Unified handler for modern iOS, Android, and tablets)
+        element.addEventListener('pointerdown', handleStart, { passive: false });
+        element.addEventListener('pointerup', handleEnd, { passive: false });
+        element.addEventListener('pointercancel', handleEnd, { passive: false });
+
+        // Touch event fallback
+        element.addEventListener('touchstart', handleStart, { passive: false });
+        element.addEventListener('touchend', handleEnd, { passive: false });
+    }
+
+    // Move Left
+    attachButtonEvent(btnLeft, 
+        () => { keys['a'] = true; keys['arrowleft'] = true; }, 
+        () => { keys['a'] = false; keys['arrowleft'] = false; }
+    );
+
+    // Move Right
+    attachButtonEvent(btnRight, 
+        () => { keys['d'] = true; keys['arrowright'] = true; }, 
+        () => { keys['d'] = false; keys['arrowright'] = false; }
+    );
+
+    // Jump Button
+    attachButtonEvent(btnJump, 
+        () => { triggerJump(); }, 
+        null
+    );
+}
+
+// Bind controls immediately if DOM is ready, or when loaded
+if (document.readyState === 'loading') {
+    window.addEventListener('DOMContentLoaded', setupMobileControls);
+} else {
+    setupMobileControls();
+}
