@@ -74,7 +74,7 @@ function saveProgress() {
     localStorage.setItem('obby_equippedSkin', equippedSkin.id);
 }
 
-// 🎯 REDUCED STAGES
+// Global Game State
 let isStartMenu = true;
 let currentLevel = 1;
 let maxUnlockedLevel = 1;
@@ -118,9 +118,8 @@ let lasers = [];
 let particles = [];
 let exitDoor = { x: 880, y: 300, w: 45, h: 65 };
 
-// 🎯 DIFFERENT BACKGROUND COLORS PER LEVEL
 const THEMES = [
-    { name: "Gray Blocks", sky: ["#d1d5db", "#f3f4f6"], platform: "#64748b", base: "#475569" }, // Matches images exactly
+    { name: "Gray Blocks", sky: ["#d1d5db", "#f3f4f6"], platform: "#64748b", base: "#475569" }, 
     { name: "Lava Cave", sky: ["#450a0a", "#7f1d1d"], platform: "#3f3f46", base: "#27272a" },
     { name: "Sky High", sky: ["#0284c7", "#bae6fd"], platform: "#cbd5e1", base: "#94a3b8" },
     { name: "Neon District", sky: ["#311042", "#c084fc"], platform: "#2dd4bf", base: "#0f766e" },
@@ -141,6 +140,7 @@ function spawnParticles(x, y, count, color, type = 'dust') {
     }
 }
 
+// 🎯 COMPLETELY UNIQUE HANDCRAFTED STAGES
 function loadLevel(levelNum) {
     platforms = []; hazards = []; coinsList = []; checkpointsList = []; lasers = [];
     checkpoint = { x: 50, y: 350 };
@@ -151,68 +151,154 @@ function loadLevel(levelNum) {
     levelTitleUI.innerText = `Stage ${levelNum} / ${TOTAL_LEVELS}`;
     themeNameUI.innerText = `Theme: ${currentTheme.name}`;
 
-    // 🎯 DIFFICULTY GREATLY REDUCED
-    // Wider platforms, closer jumps, fewer obstacles
-    let pWidth = 150 - (levelNum * 3);  // Keeps platforms large and easy to land on
-    let gap = 50 + (levelNum * 2);      // Jumps are much shorter
-    let totalObstacles = 4 + Math.floor(levelNum * 0.4); 
-    let moveSpeedMult = 0.5 + (levelNum * 0.05); // Moving platforms move slowly
+    // Helper functions for easy level building
+    const addP = (x, y, w, h, type = 'normal', move = null, van = null) => platforms.push({ x, y, w, h, type, move, van });
+    const addH = (x, y, w, h) => hazards.push({ x, y, w, h });
+    const addC = (x, y) => checkpointsList.push({ x: x, y: y, w: 20, h: 30, reached: false });
+    const addCoin = (x, y) => coinsList.push({ x, y, collected: false });
+    const addL = (cx, cy, length, speed) => lasers.push({ cx, cy, length, angle: 0, speed });
 
-    platforms.push({ x: 20, y: 400, w: 120, h: 140, type: 'normal' });
+    // Start Platform
+    addP(20, 400, 100, 200);
 
-    let currentX = 150;
-    let currentY = 380;
+    let cx = 150; 
+    let cy = 380;
 
-    for (let i = 0; i < totalObstacles; i++) {
-        if (i % 3 === 1) currentY -= 20;
-        else if (i % 3 === 2) currentY += 20;
-        currentY = Math.max(220, Math.min(420, currentY));
-
-        currentX += gap;
-
-        let type = 'normal';
-        let moveData = null;
-        let vanData = null;
-
-        // 🎯 DIFFERENT MECHANICS BASED ON LEVEL
-        if (levelNum >= 5 && i % 4 === 1) {
-            type = 'moving';
-            moveData = { dir: 1, range: 40 + levelNum, startX: currentX, speed: 0.8 * moveSpeedMult };
-        } else if (levelNum >= 7 && i % 4 === 2) {
-            type = 'crumbling';
-            vanData = { touched: false, timer: 50, destroyed: false }; // Timer is longer so it doesn't fall too fast
-        } else if (levelNum >= 10 && i % 4 === 3) {
-            type = 'bounce';
-        }
-
-        platforms.push({
-            x: currentX, y: currentY, w: pWidth, h: 200,
-            type, move: moveData, van: vanData
-        });
-
-        if (i === Math.floor(totalObstacles / 2)) {
-            checkpointsList.push({ x: currentX + pWidth / 2 - 10, y: currentY - 30, w: 20, h: 30, reached: false });
-        }
-
-        // 🎯 LAVA BLOCKS (Introduced steadily)
-        if (levelNum >= 4 && i % 2 === 1 && type !== 'crumbling') {
-            let lavaSize = 35;
-            hazards.push({ x: currentX + (pWidth / 2) - (lavaSize / 2), y: currentY - 40, w: lavaSize, h: lavaSize });
-        }
-
-        if (Math.random() > 0.4) {
-            coinsList.push({ x: currentX + pWidth / 2, y: currentY - 70, collected: false });
-        }
-
-        // 🎯 LASERS ONLY ON FINAL LEVELS
-        if (levelNum >= 13 && i % 3 === 0) {
-            lasers.push({ cx: currentX + pWidth / 2, cy: currentY - 80, length: 50, angle: 0, speed: 0.015 });
-        }
+    switch (levelNum) {
+        case 1: // The Basics
+            addP(170, 400, 120, 200);
+            addP(340, 400, 120, 200);
+            addC(400, 370);
+            addP(510, 400, 120, 200);
+            addCoin(570, 340);
+            cx = 680; cy = 400;
+            break;
+        case 2: // Staircase
+            addP(180, 360, 90, 200);
+            addP(320, 320, 90, 200);
+            addC(360, 290);
+            addP(460, 280, 90, 200);
+            addCoin(505, 220);
+            addP(600, 340, 90, 200);
+            cx = 740; cy = 380;
+            break;
+        case 3: // Gap Jumper
+            addP(180, 400, 60, 200);
+            addP(310, 400, 60, 200);
+            addC(330, 370);
+            addP(450, 400, 60, 200);
+            addP(590, 400, 60, 200);
+            cx = 720; cy = 400;
+            break;
+        case 4: // First Lava
+            addP(180, 400, 140, 200);
+            addH(230, 360, 40, 40); 
+            addP(380, 400, 140, 200);
+            addC(450, 370);
+            addH(430, 360, 40, 40);
+            addP(580, 400, 140, 200);
+            cx = 780; cy = 400;
+            break;
+        case 5: // Horizontal Moving Platforms
+            addP(180, 400, 100, 200, 'moving', { axis: 'x', dir: 1, range: 60, startX: 180, speed: 1 });
+            addP(400, 400, 100, 200);
+            addC(450, 370);
+            addP(580, 400, 100, 200, 'moving', { axis: 'x', dir: -1, range: 60, startX: 580, speed: 1.5 });
+            cx = 800; cy = 400;
+            break;
+        case 6: // Don't Look Down (Crumbling)
+            addP(160, 400, 80, 200, 'crumbling', null, { touched: false, timer: 40, destroyed: false });
+            addP(250, 400, 80, 200, 'crumbling', null, { touched: false, timer: 30, destroyed: false });
+            addP(340, 400, 80, 200, 'crumbling', null, { touched: false, timer: 20, destroyed: false });
+            addC(450, 370);
+            addP(440, 400, 100, 200);
+            addP(580, 400, 80, 200, 'crumbling', null, { touched: false, timer: 15, destroyed: false });
+            cx = 720; cy = 400;
+            break;
+        case 7: // High Bounce
+            addP(180, 450, 80, 200, 'bounce');
+            addP(320, 300, 80, 200);
+            addC(360, 270);
+            addP(460, 450, 80, 200, 'bounce');
+            addP(600, 250, 80, 200);
+            cx = 750; cy = 250;
+            break;
+        case 8: // The Floor is Lava!
+            addH(120, 450, 800, 200); 
+            addP(200, 380, 80, 20);
+            addP(350, 380, 80, 20, 'moving', { axis: 'x', dir: 1, range: 50, startX: 350, speed: 1 });
+            addC(450, 350);
+            addP(500, 380, 80, 20);
+            addP(650, 380, 80, 20, 'moving', { axis: 'x', dir: -1, range: 60, startX: 650, speed: 1.2 });
+            cx = 850; cy = 350;
+            break;
+        case 9: // Vertical Elevator
+            addP(160, 400, 80, 20, 'moving', { axis: 'y', dir: -1, range: 80, startY: 320, speed: 0.5 });
+            addP(300, 240, 80, 200);
+            addC(340, 210);
+            addP(440, 240, 80, 20, 'moving', { axis: 'y', dir: 1, range: 80, startY: 320, speed: 0.5 });
+            addP(580, 400, 80, 200);
+            cx = 720; cy = 400;
+            break;
+        case 10: // Crumble & Bounce Mixed
+            addP(180, 400, 80, 20, 'crumbling', null, { touched: false, timer: 30, destroyed: false });
+            addP(300, 400, 60, 20, 'bounce');
+            addP(420, 250, 80, 200);
+            addC(460, 220);
+            addP(560, 400, 60, 20, 'bounce');
+            addP(680, 250, 80, 200);
+            cx = 820; cy = 250;
+            break;
+        case 11: // Laser Introduction
+            addP(180, 400, 150, 200);
+            addL(255, 300, 80, 0.02);
+            addC(360, 370);
+            addP(390, 400, 150, 200);
+            addL(465, 300, 80, -0.02);
+            addP(600, 400, 100, 200);
+            cx = 760; cy = 400;
+            break;
+        case 12: // Moving + Lasers
+            addP(180, 400, 100, 200, 'moving', { axis: 'x', dir: 1, range: 40, startX: 180, speed: 1 });
+            addL(230, 300, 70, 0.03);
+            addC(360, 370);
+            addP(350, 400, 100, 200);
+            addP(500, 400, 100, 200, 'moving', { axis: 'x', dir: -1, range: 40, startX: 500, speed: 1 });
+            addL(550, 300, 70, 0.03);
+            cx = 700; cy = 400;
+            break;
+        case 13: // Precision Lava Jumps
+            addP(180, 400, 60, 200); addH(240, 400, 60, 200);
+            addP(300, 400, 60, 200); addC(330, 370); addH(360, 400, 60, 200);
+            addP(420, 400, 60, 200); addH(480, 400, 60, 200);
+            addP(540, 400, 60, 200);
+            cx = 660; cy = 400;
+            break;
+        case 14: // The Gauntlet
+            addP(180, 420, 80, 200); addL(220, 380, 40, 0.04);
+            addP(300, 360, 80, 200); addL(340, 320, 40, 0.04);
+            addC(410, 330);
+            addP(420, 300, 80, 20, 'crumbling', null, { touched: false, timer: 20, destroyed: false });
+            addL(460, 260, 40, 0.04);
+            addP(540, 240, 80, 20, 'bounce');
+            cx = 680; cy = 100;
+            break;
+        case 15: // The Final Exam (Mix of all mechanics)
+            addP(160, 400, 80, 20); 
+            addP(280, 400, 60, 20, 'crumbling', null, { touched: false, timer: 30, destroyed: false });
+            addP(400, 450, 60, 20, 'bounce');
+            addC(520, 250);
+            addP(500, 280, 80, 200); 
+            addP(620, 280, 80, 20, 'moving', { axis: 'x', dir: 1, range: 40, startX: 620, speed: 1.5 });
+            addL(660, 200, 60, 0.05);
+            addP(780, 280, 60, 20, 'crumbling', null, { touched: false, timer: 20, destroyed: false });
+            cx = 900; cy = 280;
+            break;
     }
 
-    const lastX = currentX + 150;
-    platforms.push({ x: lastX, y: currentY, w: 140, h: 200, type: 'normal' });
-    exitDoor = { x: lastX + 50, y: currentY - 65, w: 45, h: 65 };
+    // End Platform & Exit Door
+    addP(cx, cy, 140, 200);
+    exitDoor = { x: cx + 50, y: cy - 65, w: 45, h: 65 };
 }
 
 function respawnPlayer() {
@@ -322,26 +408,40 @@ function update() {
     player.scaleY += (1 - player.scaleY) * 0.15;
 
     player.grounded = false;
+    
+    // Process Platform Updates & Collisions
     platforms.forEach(p => {
+        // Handle Moving Platforms
         if (p.type === 'moving' && p.move) {
-            p.x += p.move.dir * p.move.speed;
-            if (p.x > p.move.startX + p.move.range || p.x < p.move.startX - p.move.range) p.move.dir *= -1;
+            if (p.move.axis === 'y') {
+                p.y += p.move.dir * p.move.speed;
+                if (p.y > p.move.startY + p.move.range || p.y < p.move.startY - p.move.range) p.move.dir *= -1;
+            } else {
+                p.x += p.move.dir * p.move.speed;
+                if (p.x > p.move.startX + p.move.range || p.x < p.move.startX - p.move.range) p.move.dir *= -1;
+            }
         }
+
+        // Handle Crumbling Platforms
         if (p.type === 'crumbling' && p.van && p.van.touched) {
             p.van.timer--;
             if (p.van.timer <= 0) p.van.destroyed = true;
         }
         if (p.type === 'crumbling' && p.van && p.van.destroyed) return;
 
+        // Player Collision
         if (player.x + player.width > p.x && player.x < p.x + p.w) {
             if (player.y + player.height >= p.y && player.y + player.height <= p.y + 18 && player.vy >= 0) {
                 if (!player.grounded && player.vy > 2) { player.scaleX = 1.3; player.scaleY = 0.7; }
+                
                 player.y = p.y - player.height;
                 player.vy = 0;
                 player.grounded = true;
                 player.jumpsLeft = player.maxJumps;
 
-                if (p.type === 'moving' && p.move) player.x += p.move.dir * p.move.speed;
+                if (p.type === 'moving' && p.move) {
+                    if (!p.move.axis || p.move.axis === 'x') player.x += p.move.dir * p.move.speed;
+                }
                 if (p.type === 'bounce') { player.vy = -16.5; spawnParticles(player.x + 14, player.y + 35, 10, '#facc15', 'spark'); }
                 if (p.type === 'crumbling' && p.van) p.van.touched = true;
             }
@@ -349,7 +449,6 @@ function update() {
     });
 
     hazards.forEach(h => {
-        // More forgiving hitbox for lava blocks (need to really touch it to die)
         if (player.x + player.width - 5 > h.x && player.x + 5 < h.x + h.w &&
             player.y + player.height > h.y + 5 && player.y + 5 < h.y + h.h) {
             handleDeath();
@@ -380,7 +479,7 @@ function update() {
         if (Math.hypot((player.x + 14) - lx, (player.y + 19) - ly) < 18) handleDeath();
     });
 
-    if (player.y > canvas.height + 60) handleDeath();
+    if (player.y > canvas.height + 150) handleDeath();
 
     if (player.x + player.width > exitDoor.x && player.x < exitDoor.x + exitDoor.w &&
         player.y + player.height > exitDoor.y && player.y < exitDoor.y + exitDoor.h) {
@@ -416,10 +515,8 @@ function handleDeath() {
     respawnPlayer();
 }
 
-// 🎯 GEOMETRIC BACKGROUND FROM SCREENSHOTS
 function drawBackground() {
     bgTimer += 0.03;
-
     let skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
     skyGrad.addColorStop(0, currentTheme.sky[0]);
     skyGrad.addColorStop(1, currentTheme.sky[1]);
@@ -449,22 +546,14 @@ function drawBackground() {
     ctx.restore();
 }
 
-// 🎯 LAVA BLOCKS FROM SCREENSHOTS
 function drawLavaBlock(h) {
-    // Outer translucent glow
     ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
     ctx.fillRect(h.x - 2, h.y - 2, h.w + 4, h.h + 4);
-    
-    // Core lava block
     ctx.fillStyle = '#dc2626';
     ctx.fillRect(h.x, h.y, h.w, h.h);
-    
-    // Shadow depth
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.fillRect(h.x, h.y + h.h - 5, h.w, 5);
     ctx.fillRect(h.x + h.w - 5, h.y, 5, h.h);
-    
-    // Cracked texture lines
     ctx.strokeStyle = '#991b1b';
     ctx.lineWidth = 1;
     ctx.beginPath();
@@ -501,14 +590,12 @@ function draw() {
     platforms.forEach(p => {
         if (p.type === 'crumbling' && p.van && p.van.destroyed) return;
 
-        // Base platform colors
         ctx.fillStyle = (p.type === 'bounce') ? '#facc15' : currentTheme.platform;
         ctx.fillRect(p.x, p.y, p.w, p.h);
 
         ctx.fillStyle = (p.type === 'bounce') ? '#ca8a04' : currentTheme.base;
         ctx.fillRect(p.x, p.y + 8, p.w, p.h - 8);
 
-        // 🎯 DIAMOND-PLATE / BLOCK TEXTURE overlay (from images)
         ctx.save();
         ctx.globalAlpha = 0.12;
         ctx.fillStyle = '#000000';
@@ -519,7 +606,6 @@ function draw() {
         }
         ctx.restore();
 
-        // Edge highlights
         ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
         ctx.fillRect(p.x, p.y, p.w, 3);
         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
@@ -542,7 +628,6 @@ function draw() {
         }
     });
 
-    // 🎯 DRAW LAVA BLOCKS INSTEAD OF SPIKES
     hazards.forEach(h => drawLavaBlock(h));
 
     lasers.forEach(l => {
