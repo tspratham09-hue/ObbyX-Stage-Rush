@@ -59,7 +59,7 @@ function playSFX(type) {
     }
 }
 
-// 🌟 NEW CHARACTER SKINS ADDED HERE
+// 🌟 CHARACTER SKINS
 const SKINS = [
     { id: 'king', name: 'King', cost: 0, color: '#fde047', dark: '#ca8a04', type: 'king' },
     { id: 'knight', name: 'Knight', cost: 10, color: '#84cc16', dark: '#4d7c0f', type: 'knight' },
@@ -123,14 +123,14 @@ initBgParticles();
 
 const player = {
     x: 50, y: 350, width: 28, height: 38,
-    vx: 0, vy: 0, speed: 5.0, jumpForce: -11.5, // slightly buffed for mobile ease
+    vx: 0, vy: 0, speed: 5.0, jumpForce: -11.5,
     grounded: false, jumpsLeft: 2, maxJumps: 2,
     facingRight: true, scaleX: 1, scaleY: 1
 };
 
 let checkpoint = { x: 50, y: 350 };
 const GRAVITY = 0.52;
-const FRICTION = 0.80; // better handling
+const FRICTION = 0.80;
 let keys = {};
 
 let platforms = [];
@@ -320,9 +320,8 @@ function loadLevel(levelNum) {
             cx = 1350; cy = 280; break;
     }
 
-    // 🌟 END PLATFORM & NEW EXIT SPIKES
+    // End Platform & Spikes
     addP(cx, cy, 150, 200);
-    // Spikes protecting the final door
     addH('spike', cx + 15, cy - 20, 40, 20); 
     exitDoor = { x: cx + 75, y: cy - 65, w: 45, h: 65 };
 }
@@ -478,12 +477,11 @@ function update() {
         }
     });
 
-    // 🌟 PERFECT CHECKPOINT POSITIONING FIX
     checkpointsList.forEach(cp => {
         if (!cp.reached && player.x + player.width > cp.x && player.x < cp.x + cp.w &&
             player.y + player.height > cp.y && player.y < cp.y + cp.h) {
             cp.reached = true;
-            checkpoint = { x: cp.x + 4, y: cp.y + cp.h - player.height - 2 }; // Anchors spawn safely to the floor
+            checkpoint = { x: cp.x + 4, y: cp.y + cp.h - player.height - 2 };
             spawnParticles(cp.x, cp.y, 12, '#fde047', 'spark');
         }
     });
@@ -613,7 +611,7 @@ function drawHazard(h) {
     }
 }
 
-// 🌟 NEW DETAILED CHARACTER DRAWING LOGIC
+// 🌟 DETAILED CHARACTER DRAWING LOGIC
 function drawTCharacter(x, y) {
     ctx.save();
     ctx.translate(x + 14, y + 38);
