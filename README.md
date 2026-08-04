@@ -1,6 +1,7 @@
 # 🎮 PixelPlay Arena - Obby Stage Rush
 
-![Obby Stage Rush Gameplay](https://raw.githubusercontent.com/tspratham09-hue/PixelPlay-Arena/main/assets/preview.png) <!-- Optional: Replace with a link to your screenshot if available -->
+our multi-game hub is live at:
+👉 [https://tspratham09-hue.github.io/PixelPlay-Arena/]
 
 Welcome to **Obby Stage Rush**, a fast-paced, multi-stage 2D platformer game built with HTML5, CSS3, and JavaScript! Complete challenging obstacle courses (obbies), dodge hazards, collect coins, unlock new character skins, and beat the clock across 15 custom neon-themed stages.
 
