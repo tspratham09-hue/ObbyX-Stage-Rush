@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Obby Stage Rush - Advanced Edition</title>
+    <title>Obby Stage Rush - No Spikes, New Mechanics!</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #0f172a; color: white; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -132,7 +132,6 @@ const SKINS = [
 let unlockedSkins = ['king']; let equippedSkin = SKINS[0];
 let coins = 0; let currentLevel = 1; let deaths = 0; let isPaused = false;
 
-// 🔥 TIGHTER PHYSICS: Strict double jump, slightly faster drop
 const player = {
     x: 50, y: 350, width: 28, height: 38,
     vx: 0, vy: 0, speed: 6, jumpForce: -11.5, 
@@ -144,7 +143,8 @@ const FRICTION = 0.82;
 
 let checkpoint = { x: 50, y: 350 };
 let keys = {};
-let platforms = []; let spikes = []; let lavas = []; let bouncePads = []; let coinsList = []; let checkpointsList = []; let particles = []; 
+let platforms = []; let lavas = []; let bouncePads = []; let coinsList = []; let checkpointsList = []; let particles = []; 
+let movingPlatforms = []; let fragilePlatforms = [];
 let exitDoor = { x: 880, y: 300, w: 45, h: 65 };
 let cameraX = 0; let bgTimer = 0; 
 
@@ -166,7 +166,6 @@ function saveProgress() {
     localStorage.setItem('obby_equippedSkin', equippedSkin.id);
 }
 
-// Advanced Rendering Engine (same as before for shop & game)
 function drawAdvancedCharacter(context, x, y, skin, facingRight = true, scaleX = 1, scaleY = 1) {
     context.save();
     context.translate(x, y);
@@ -242,16 +241,16 @@ function renderShop() {
     coinCounterUI.innerText = `🪙 ${coins}`;
 }
 
-// Particle System
 function spawnParticles(x, y, color, count, speed) {
     for(let i=0; i<count; i++) {
         particles.push({ x, y, vx: (Math.random()-0.5)*speed, vy: (Math.random()-0.5)*speed - 2, life: 1, color, size: Math.random()*4 + 2 });
     }
 }
 
-// 🔥 ADVANCED LEVEL DESIGN
+// 🚧 REWORKED LEVEL DESIGN (No Spikes, New Obstacles)
 function loadLevel(levelNum) {
-    platforms = []; spikes = []; lavas = []; bouncePads = []; coinsList = []; checkpointsList = []; particles = [];
+    platforms = []; lavas = []; bouncePads = []; coinsList = []; checkpointsList = []; particles = []; 
+    movingPlatforms = []; fragilePlatforms = [];
     checkpoint = { x: 50, y: 350 };
     player.x = checkpoint.x; player.y = checkpoint.y; player.vx = 0; player.vy = 0;
     cameraX = 0; bgTimer = 0;
@@ -261,33 +260,53 @@ function loadLevel(levelNum) {
     themeNameUI.innerText = `Theme: ${currentTheme.name}`;
 
     const addP = (x, y, w, h) => platforms.push({ x, y, w, h });
-    const addS = (x, y, count) => spikes.push({ x, y, w: count*20, h: 20, count });
     const addL = (x, y, w, h) => lavas.push({ x, y, w, h });
     const addB = (x, y, w) => bouncePads.push({ x, y, w, h: 15 });
     const addC = (x, y) => checkpointsList.push({ x, y, w: 20, h: 30, reached: false });
     const addCoin = (x, y) => coinsList.push({ x, y, collected: false });
+    const addMP = (x, y, w, h, vx, vy, range) => movingPlatforms.push({ x, y, w, h, vx, vy, range, traveled: 0 });
+    const addFP = (x, y, w) => fragilePlatforms.push({ x, y, w, h: 15, active: true, timer: 60, respawnTimer: 0 });
 
     if(levelNum === 1) {
+        // Stage 1: Basic mechanics and Bounce Pads
         addP(20, 400, 160, 200); 
-        addP(250, 400, 160, 200); addS(300, 380, 2); // Introduce Spikes
-        addP(500, 400, 100, 200); addB(525, 385, 50); // Introduce Bounce
-        addP(750, 200, 100, 400); addC(780, 170); // Checkpoint up high
+        addP(250, 400, 160, 200);
+        addP(500, 400, 100, 200); addB(525, 385, 50); 
+        addP(750, 200, 100, 400); addC(780, 170);
         addP(950, 350, 120, 200); addCoin(1000, 310);
-        addP(1150, 400, 150, 200); addS(1150, 380, 3);
-        
+        addP(1150, 400, 150, 200); 
         addP(1400, 380, 150, 200); exitDoor = { x: 1450, y: 315, w: 45, h: 65 };
-    } else {
-        // Level 2: Introduce Lava
+    } else if(levelNum === 2) {
+        // Stage 2: Introducing Lava
         addP(20, 400, 120, 200);
-        addL(140, 450, 300, 150); // Lava pit
-        addP(200, 350, 60, 20); addP(320, 300, 60, 20); // Small floating platforms
+        addL(140, 450, 300, 150); 
+        addP(200, 350, 60, 20); addP(320, 300, 60, 20); 
         addP(440, 400, 120, 200); addC(480, 370);
-        
         addL(560, 450, 400, 150);
         addP(620, 350, 60, 20); addB(625, 335, 50);
-        addP(800, 150, 80, 20); addCoin(830, 110); addS(820, 130, 2);
-        
+        addP(800, 150, 80, 20); addCoin(830, 110); 
         addP(1000, 380, 150, 200); exitDoor = { x: 1050, y: 315, w: 45, h: 65 };
+    } else {
+        // Stage 3: Introducing Moving & Fragile Platforms
+        addP(20, 400, 120, 200);
+        addL(140, 450, 400, 150);
+        
+        // Moving Platform across lava
+        addMP(180, 380, 80, 20, 1.5, 0, 250); 
+        
+        addP(540, 400, 100, 200); addC(580, 370);
+        addL(640, 450, 500, 150);
+        
+        // Fragile Platforms sequence
+        addFP(680, 350, 60); 
+        addFP(780, 300, 60);
+        addFP(880, 250, 60);
+        addCoin(895, 200);
+        
+        // Vertical Moving Platform
+        addMP(1000, 300, 80, 20, 0, 2, 200);
+
+        addP(1150, 100, 150, 500); exitDoor = { x: 1200, y: 35, w: 45, h: 65 };
     }
 }
 
@@ -337,23 +356,64 @@ function update() {
     cameraX += (targetCameraX - cameraX) * 0.1;
     if (cameraX < 0) cameraX = 0;
 
-    // Platform Collision
     player.grounded = false;
+
+    // Standard Platforms
     platforms.forEach(p => {
         if (player.x + player.width > p.x && player.x < p.x + p.w) {
-            // Landing on top
             if (player.y + player.height >= p.y && player.y + player.height <= p.y + 25 && player.vy >= 0) {
-                if(!player.grounded && player.vy > 5) spawnParticles(player.x+14, p.y, '#94a3b8', 5, 3); // Dust
+                if(!player.grounded && player.vy > 5) spawnParticles(player.x+14, p.y, '#94a3b8', 5, 3);
                 player.y = p.y - player.height; player.vy = 0; player.grounded = true; player.jumpsLeft = player.maxJumps;
             }
         }
     });
 
-    // Bounce Pads Collision
+    // Moving Platforms
+    movingPlatforms.forEach(mp => {
+        mp.x += mp.vx; mp.y += mp.vy;
+        mp.traveled += Math.abs(mp.vx) + Math.abs(mp.vy);
+        if(mp.traveled >= mp.range) {
+            mp.vx *= -1; mp.vy *= -1; mp.traveled = 0;
+        }
+
+        if (player.x + player.width > mp.x && player.x < mp.x + mp.w) {
+            if (player.y + player.height >= mp.y && player.y + player.height <= mp.y + 25 && player.vy >= 0) {
+                player.y = mp.y - player.height; player.vy = 0; player.grounded = true; player.jumpsLeft = player.maxJumps;
+                player.x += mp.vx; player.y += mp.vy; // Ride the platform
+            }
+        }
+    });
+
+    // Fragile Platforms
+    fragilePlatforms.forEach(fp => {
+        if(!fp.active) {
+            fp.respawnTimer--;
+            if(fp.respawnTimer <= 0) { fp.active = true; fp.timer = 60; spawnParticles(fp.x + fp.w/2, fp.y, '#a855f7', 10, 4); }
+            return;
+        }
+
+        let playerStanding = false;
+        if (player.x + player.width > fp.x && player.x < fp.x + fp.w) {
+            if (player.y + player.height >= fp.y && player.y + player.height <= fp.y + 25 && player.vy >= 0) {
+                player.y = fp.y - player.height; player.vy = 0; player.grounded = true; player.jumpsLeft = player.maxJumps;
+                playerStanding = true;
+            }
+        }
+
+        if(playerStanding || fp.timer < 60) {
+            fp.timer--;
+            if(fp.timer <= 0) {
+                fp.active = false; fp.respawnTimer = 120;
+                spawnParticles(fp.x + fp.w/2, fp.y, '#94a3b8', 15, 5); // Break effect
+            }
+        }
+    });
+
+    // Bounce Pads
     bouncePads.forEach(b => {
         if (player.x + player.width > b.x && player.x < b.x + b.w && player.y + player.height >= b.y && player.y + player.height <= b.y + 20 && player.vy >= 0) {
             player.y = b.y - player.height; 
-            player.vy = -17; // Massive bounce!
+            player.vy = -17; 
             player.jumpsLeft = player.maxJumps;
             player.scaleX = 0.5; player.scaleY = 1.6;
             spawnParticles(player.x+14, b.y, '#4ade80', 15, 8);
@@ -361,14 +421,11 @@ function update() {
     });
 
     // Hazard Collisions
-    const pxCenter = player.x + player.width/2; const pyCenter = player.y + player.height/2;
-    spikes.forEach(s => {
-        if (pxCenter > s.x && pxCenter < s.x + s.w && player.y + player.height > s.y + 5) die();
-    });
+    const pxCenter = player.x + player.width/2; 
     lavas.forEach(l => {
         if (pxCenter > l.x && pxCenter < l.x + l.w && player.y + player.height > l.y + 10) die();
     });
-    if (player.y > canvas.height + 200) die(); // Fell into abyss
+    if (player.y > canvas.height + 200) die(); 
 
     // Checkpoints & Collectibles
     checkpointsList.forEach(cp => {
@@ -389,7 +446,6 @@ function update() {
         currentLevel++; loadLevel(currentLevel);
     }
 
-    // Update Particles
     particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.2; p.life -= 0.03; });
     particles = particles.filter(p => p.life > 0);
 }
@@ -397,12 +453,10 @@ function update() {
 function draw() {
     bgTimer += 0.03;
     
-    // Background gradient
     let skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
     skyGrad.addColorStop(0, currentTheme.sky[0]); skyGrad.addColorStop(0.5, currentTheme.sky[1]); skyGrad.addColorStop(1, currentTheme.sky[2]);
     ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Animated Synthwave Grid Background
     ctx.save();
     ctx.strokeStyle = currentTheme.grid; ctx.lineWidth = 1; ctx.globalAlpha = 0.3;
     let gridOffset = (cameraX * 0.2) % 50;
@@ -412,22 +466,30 @@ function draw() {
 
     ctx.save(); ctx.translate(-Math.floor(cameraX), 0);
     
-    // Draw Platforms
     platforms.forEach(p => {
         ctx.fillStyle = currentTheme.platform; ctx.fillRect(p.x, p.y, p.w, 10);
         ctx.fillStyle = currentTheme.base; ctx.fillRect(p.x, p.y + 10, p.w, p.h - 10);
     });
 
-    // Draw Spikes (Glowing)
-    ctx.shadowBlur = 10; ctx.shadowColor = '#ef4444'; ctx.fillStyle = '#dc2626';
-    spikes.forEach(s => {
-        for(let i=0; i<s.count; i++) {
-            ctx.beginPath(); ctx.moveTo(s.x + (i*20) + 10, s.y); ctx.lineTo(s.x + (i*20) + 20, s.y + 20); ctx.lineTo(s.x + (i*20), s.y + 20); ctx.fill();
+    // Draw Moving Platforms
+    movingPlatforms.forEach(mp => {
+        ctx.fillStyle = '#14b8a6'; ctx.fillRect(mp.x, mp.y, mp.w, 8); // Top cyan strip
+        ctx.fillStyle = '#0f766e'; ctx.fillRect(mp.x, mp.y + 8, mp.w, mp.h - 8);
+    });
+
+    // Draw Fragile Platforms
+    fragilePlatforms.forEach(fp => {
+        if(fp.active) {
+            let shakeX = (fp.timer < 60) ? (Math.random() - 0.5) * 4 : 0;
+            let alpha = fp.timer / 60;
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = '#a855f7'; ctx.fillRect(fp.x + shakeX, fp.y, fp.w, 8);
+            ctx.fillStyle = '#7e22ce'; ctx.fillRect(fp.x + shakeX, fp.y + 8, fp.w, fp.h - 8);
+            ctx.globalAlpha = 1;
         }
     });
-    ctx.shadowBlur = 0;
 
-    // Draw Lava (Animated waves)
+    // Draw Lava
     ctx.fillStyle = '#ea580c'; ctx.shadowBlur = 15; ctx.shadowColor = '#f97316';
     lavas.forEach(l => {
         ctx.beginPath(); ctx.moveTo(l.x, l.y + l.h); ctx.lineTo(l.x, l.y + 5);
@@ -437,41 +499,35 @@ function draw() {
     });
     ctx.shadowBlur = 0;
 
-    // Draw Bounce Pads
     bouncePads.forEach(b => {
-        ctx.fillStyle = '#334155'; ctx.fillRect(b.x, b.y+5, b.w, b.h-5); // Base
-        ctx.fillStyle = '#4ade80'; ctx.shadowBlur = 15; ctx.shadowColor = '#22c55e'; // Glowing top
+        ctx.fillStyle = '#334155'; ctx.fillRect(b.x, b.y+5, b.w, b.h-5);
+        ctx.fillStyle = '#4ade80'; ctx.shadowBlur = 15; ctx.shadowColor = '#22c55e';
         ctx.fillRect(b.x, b.y + Math.sin(bgTimer*8)*2, b.w, 5); 
         ctx.shadowBlur = 0;
     });
 
-    // Checkpoints
     checkpointsList.forEach(cp => {
         ctx.fillStyle = '#64748b'; ctx.fillRect(cp.x, cp.y, 4, cp.h);
         ctx.fillStyle = cp.reached ? '#22c55e' : '#cbd5e1';
         ctx.beginPath(); ctx.moveTo(cp.x + 4, cp.y); ctx.lineTo(cp.x + 20, cp.y + 5); ctx.lineTo(cp.x + 4, cp.y + 12); ctx.fill();
     });
 
-    // Coins (Glowing and bobbing)
     ctx.shadowBlur = 15; ctx.shadowColor = '#fde047'; ctx.fillStyle = '#facc15';
     coinsList.forEach(c => {
         if (!c.collected) { ctx.beginPath(); ctx.arc(c.x, c.y + Math.sin(bgTimer*5)*4, 8, 0, Math.PI * 2); ctx.fill(); }
     });
     ctx.shadowBlur = 0;
 
-    // Exit Door
     ctx.fillStyle = '#f59e0b'; ctx.shadowBlur = 20; ctx.shadowColor = '#fbbf24';
     ctx.fillRect(exitDoor.x, exitDoor.y, exitDoor.w, exitDoor.h);
     ctx.shadowBlur = 0;
     
-    // Draw Particles
     particles.forEach(p => {
         ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
         ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
     });
     ctx.globalAlpha = 1;
 
-    // Character
     drawAdvancedCharacter(ctx, player.x + 14, player.y + 38, equippedSkin, player.facingRight, player.scaleX, player.scaleY);
     
     ctx.restore();
