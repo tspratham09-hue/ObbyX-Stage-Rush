@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Obby Stage Rush - Easy Mode</title>
+    <title>Obby Stage Rush - Easy Mode & Advanced Characters</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #0f172a; color: white; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -33,11 +33,12 @@
         .close-btn { position: absolute; top: 15px; right: 15px; background: #ef4444; border: none; color: white; width: 30px; height: 30px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         
         /* Shop Grid */
-        #shop-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        #shop-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .shop-card { background: #334155; padding: 15px; border-radius: 8px; text-align: center; border: 2px solid transparent; transition: 0.2s; }
         .shop-card.selected { border-color: #22c55e; background: #064e3b; }
-        .shop-preview { width: 40px; height: 60px; margin: 10px auto; border-radius: 4px; border: 2px solid rgba(0,0,0,0.3); }
-        .shop-card button { margin-top: 10px; width: 100%; padding: 8px; border: none; border-radius: 4px; background: #3b82f6; color: white; font-weight: bold; cursor: pointer; }
+        .shop-card h4 { margin-bottom: 5px; color: #f8fafc; }
+        .shop-card p { font-size: 14px; color: #cbd5e1; margin-bottom: 10px; }
+        .shop-card button { margin-top: 5px; width: 100%; padding: 8px; border: none; border-radius: 4px; background: #3b82f6; color: white; font-weight: bold; cursor: pointer; }
         .shop-card button:disabled { background: #64748b; cursor: not-allowed; }
 
         /* Mobile Controls */
@@ -50,7 +51,7 @@
         @media (max-width: 768px) {
             #mobile-controls { display: flex; }
             .btn-row { top: 20px; bottom: auto; right: 20px; }
-            #ui-layer { display: none; } /* Hide complex UI on small screens to save space */
+            #ui-layer { display: none; } 
         }
     </style>
 </head>
@@ -119,7 +120,7 @@ const shopItemsContainer = document.getElementById('shop-items');
 let audioCtx = null;
 function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
 
-// SKINS
+// SKINS - Now dictating advanced features
 const SKINS = [
     { id: 'king', name: 'King', cost: 0, color: '#fde047', dark: '#ca8a04', type: 'king' },
     { id: 'knight', name: 'Knight', cost: 10, color: '#84cc16', dark: '#4d7c0f', type: 'knight' },
@@ -138,7 +139,7 @@ let equippedSkin = SKINS[0];
 let coins = 0; let currentLevel = 1; let deaths = 0;
 let isPaused = false;
 
-// 🌟 EASIER PHYSICS: More jump force, less gravity, 3 jumps!
+// EASIER PHYSICS
 const player = {
     x: 50, y: 350, width: 28, height: 38,
     vx: 0, vy: 0, speed: 5.5, jumpForce: -12.5, 
@@ -171,6 +172,103 @@ function saveProgress() {
     localStorage.setItem('obby_equippedSkin', equippedSkin.id);
 }
 
+// 🌟 ADVANCED CHARACTER RENDERING ENGINE 🌟
+// Used for both the game and the shop previews!
+function drawAdvancedCharacter(context, x, y, skin, facingRight = true, scaleX = 1, scaleY = 1) {
+    context.save();
+    context.translate(x, y);
+    context.scale(facingRight ? scaleX : -scaleX, scaleY);
+    
+    // Base Body
+    context.fillStyle = skin.color;
+    context.fillRect(-8, -38, 16, 12); // Head
+    context.fillRect(-14, -26, 28, 9); // Arms/Chest
+    context.fillRect(-7, -17, 14, 17); // Legs
+
+    // Shading
+    context.fillStyle = skin.dark;
+    context.fillRect(4, -38, 4, 12); // Head Shade
+    context.fillRect(9, -26, 5, 9);  // Arm Shade
+    
+    // Eyes
+    context.fillStyle = '#000000';
+    context.fillRect(-4, -34, 3, 3);
+    context.fillRect(2, -34, 3, 3);
+
+    const type = skin.type;
+
+    // Advanced Accessories
+    if (type === 'king') {
+        // Crown
+        context.fillStyle = '#fbbf24'; 
+        context.beginPath(); context.moveTo(-10, -38); context.lineTo(-10, -48); context.lineTo(-4, -42); context.lineTo(0, -49); context.lineTo(4, -42); context.lineTo(10, -48); context.lineTo(10, -38); context.fill();
+        // Red Cape
+        context.fillStyle = '#dc2626'; context.fillRect(-12, -26, 4, 26);
+    } else if (type === 'knight') {
+        // Helmet
+        context.fillStyle = '#94a3b8'; context.fillRect(-10, -40, 20, 16);
+        context.fillStyle = '#0f172a'; context.fillRect(-10, -35, 16, 4); // Visor slit
+        // Sword
+        context.fillStyle = '#cbd5e1'; context.fillRect(14, -28, 4, 20);
+        context.fillStyle = '#b45309'; context.fillRect(12, -22, 8, 3); // Hilt
+    } else if (type === 'wizard') {
+        // Pointy Hat
+        context.fillStyle = '#1e3a8a';
+        context.beginPath(); context.moveTo(-12, -38); context.lineTo(12, -38); context.lineTo(0, -58); context.fill();
+        // White Beard
+        context.fillStyle = '#e2e8f0'; context.fillRect(-6, -28, 12, 8);
+        // Magic Staff
+        context.fillStyle = '#78350f'; context.fillRect(14, -35, 3, 32);
+        context.fillStyle = '#38bdf8'; context.beginPath(); context.arc(15.5, -37, 5, 0, Math.PI*2); context.fill();
+    } else if (type === 'ninja') {
+        // Dark Mask
+        context.fillStyle = '#171717'; context.fillRect(-9, -39, 18, 14);
+        context.fillStyle = skin.color; context.fillRect(-5, -35, 10, 4); // Skin showing
+        context.fillStyle = '#000'; context.fillRect(-3, -34, 2, 2); context.fillRect(1, -34, 2, 2); // Eyes again
+        // Red Headband
+        context.fillStyle = '#dc2626'; context.fillRect(-14, -37, 6, 3); context.fillRect(-12, -33, 4, 3);
+    } else if (type === 'archer') {
+        // Green Hood
+        context.fillStyle = '#166534'; context.fillRect(-10, -40, 20, 12);
+        // Bow
+        context.strokeStyle = '#78350f'; context.lineWidth = 3; context.beginPath(); context.arc(16, -20, 10, -Math.PI/2, Math.PI/2); context.stroke();
+    } else if (type === 'chef') {
+        // Tall Chef Hat
+        context.fillStyle = '#ffffff';
+        context.beginPath(); context.arc(-5, -42, 6, 0, Math.PI*2); context.arc(5, -42, 6, 0, Math.PI*2); context.arc(0, -48, 8, 0, Math.PI*2); context.fill();
+        context.fillRect(-8, -42, 16, 5);
+        // White Apron
+        context.fillStyle = '#ffffff'; context.fillRect(-6, -20, 12, 14);
+    } else if (type === 'pink') {
+        // Big Pink Bow on Head
+        context.fillStyle = '#be185d';
+        context.beginPath(); context.moveTo(0, -42); context.lineTo(-10, -48); context.lineTo(-10, -36); context.fill();
+        context.beginPath(); context.moveTo(0, -42); context.lineTo(10, -48); context.lineTo(10, -36); context.fill();
+        context.beginPath(); context.arc(0, -42, 4, 0, Math.PI*2); context.fill();
+    } else if (type === 'gent') {
+        // Top Hat
+        context.fillStyle = '#171717'; context.fillRect(-12, -38, 24, 3); context.fillRect(-7, -50, 14, 12);
+        // Monocle
+        context.strokeStyle = '#fbbf24'; context.lineWidth = 1.5; context.beginPath(); context.arc(3.5, -32.5, 3.5, 0, Math.PI*2); context.stroke();
+        // Red Bowtie
+        context.fillStyle = '#dc2626'; context.beginPath(); context.moveTo(0, -25); context.lineTo(-5, -28); context.lineTo(-5, -22); context.fill(); context.beginPath(); context.moveTo(0, -25); context.lineTo(5, -28); context.lineTo(5, -22); context.fill();
+    } else if (type === 'rapper') {
+        // Backwards Cap
+        context.fillStyle = '#ef4444'; context.fillRect(-8, -43, 16, 6); context.fillRect(-14, -40, 6, 3);
+        // Sunglasses
+        context.fillStyle = '#000000'; context.fillRect(-7, -35, 14, 5);
+        // Gold Chain
+        context.strokeStyle = '#fbbf24'; context.lineWidth = 2.5; context.beginPath(); context.moveTo(-6, -26); context.lineTo(0, -18); context.lineTo(6, -26); context.stroke();
+    } else if (type === 'builder') {
+        // Yellow Hard Hat
+        context.fillStyle = '#facc15'; context.beginPath(); context.arc(0, -38, 9, Math.PI, 0); context.fill(); context.fillRect(-11, -39, 22, 3);
+        // Orange Safety Vest
+        context.fillStyle = '#ea580c'; context.fillRect(-9, -26, 4, 12); context.fillRect(5, -26, 4, 12); context.fillRect(-9, -17, 18, 4);
+    }
+
+    context.restore();
+}
+
 openShopBtn.onclick = () => { isPaused = true; shopModal.classList.remove('hidden'); renderShop(); };
 closeShopBtn.onclick = () => { isPaused = false; shopModal.classList.add('hidden'); };
 
@@ -179,9 +277,18 @@ function renderShop() {
     SKINS.forEach(skin => {
         const isUnlocked = unlockedSkins.includes(skin.id);
         const isEquipped = equippedSkin.id === skin.id;
+        
         const card = document.createElement('div');
         card.className = `shop-card ${isEquipped ? 'selected' : ''}`;
-        card.innerHTML = `<h4>${skin.name}</h4><div class="shop-preview" style="background: ${skin.color}"></div><p>${isUnlocked ? 'Owned' : '🪙 ' + skin.cost}</p><button ${isEquipped ? 'disabled' : ''}>${isEquipped ? 'Equipped' : isUnlocked ? 'Equip' : 'Buy'}</button>`;
+        
+        // Instead of a colored div, we use a real canvas to draw the advanced character!
+        card.innerHTML = `
+            <h4>${skin.name}</h4>
+            <canvas id="preview-${skin.id}" width="60" height="70" style="margin: 0 auto; display: block;"></canvas>
+            <p>${isUnlocked ? 'Owned' : '🪙 ' + skin.cost}</p>
+            <button ${isEquipped ? 'disabled' : ''}>${isEquipped ? 'Equipped' : isUnlocked ? 'Equip' : 'Buy'}</button>
+        `;
+        
         card.querySelector('button').onclick = () => {
             if (isUnlocked) equippedSkin = skin;
             else if (coins >= skin.cost) { coins -= skin.cost; unlockedSkins.push(skin.id); equippedSkin = skin; }
@@ -189,10 +296,22 @@ function renderShop() {
         };
         shopItemsContainer.appendChild(card);
     });
+
+    // Draw the characters onto the shop canvases after they are added to the DOM
+    SKINS.forEach(skin => {
+        const previewCanvas = document.getElementById(`preview-${skin.id}`);
+        if(previewCanvas) {
+            const pCtx = previewCanvas.getContext('2d');
+            // Draw character in the center of the 60x70 canvas, scaled up slightly
+            drawAdvancedCharacter(pCtx, 30, 60, skin, true, 1.2, 1.2);
+        }
+    });
+
     coinCounterUI.innerText = `🪙 ${coins}`;
 }
 
-// 🌟 EASIER LEVELS: Wider platforms, fewer hazards
+
+// EASIER LEVELS
 function loadLevel(levelNum) {
     platforms = []; hazards = []; coinsList = []; checkpointsList = [];
     checkpoint = { x: 50, y: 350 };
@@ -219,7 +338,6 @@ function loadLevel(levelNum) {
         addP(820, 380, 160, 200);
         cx = 1050; cy = 400;
     } else {
-        // Generic easy generator for subsequent levels just for demonstration
         addP(250, 400, 150, 200); 
         addP(450, 350, 150, 200); addC(500, 320);
         addP(700, 350, 150, 200);
@@ -246,7 +364,7 @@ window.addEventListener('keydown', (e) => {
 });
 window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
 
-// Mobile Controls Setup
+// Mobile Controls
 const attachBtn = (id, key) => {
     const el = document.getElementById(id);
     if(!el) return;
@@ -257,40 +375,6 @@ const attachBtn = (id, key) => {
 attachBtn('btn-left', 'arrowleft');
 attachBtn('btn-right', 'arrowright');
 attachBtn('btn-jump', 'space');
-
-
-function drawTCharacter(x, y) {
-    ctx.save();
-    ctx.translate(x + 14, y + 38);
-    ctx.scale(player.facingRight ? player.scaleX : -player.scaleX, player.scaleY);
-    
-    // Body
-    ctx.fillStyle = equippedSkin.color;
-    ctx.fillRect(-8, -38, 16, 12); // Head
-    ctx.fillRect(-14, -26, 28, 9); // Arms/Chest
-    ctx.fillRect(-7, -17, 14, 17); // Legs
-
-    // Shading & Eyes
-    ctx.fillStyle = equippedSkin.dark;
-    ctx.fillRect(4, -38, 4, 12);
-    ctx.fillRect(9, -26, 5, 9);
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(-4, -34, 3, 3);
-    ctx.fillRect(2, -34, 3, 3);
-
-    const type = equippedSkin.type;
-    // Accessories based on selected character
-    if (type === 'king') {
-        ctx.fillStyle = '#fbbf24'; ctx.fillRect(-9, -42, 18, 4); 
-        ctx.fillRect(-9, -45, 4, 3); ctx.fillRect(-2, -45, 4, 3); ctx.fillRect(5, -45, 4, 3);
-    } else if (type === 'ninja') {
-        ctx.fillStyle = '#000000'; ctx.fillRect(-9, -36, 18, 6);
-        ctx.fillStyle = equippedSkin.color; ctx.fillRect(-4, -34, 8, 3);
-        ctx.fillStyle = '#000000'; ctx.fillRect(-3, -34, 2, 2); ctx.fillRect(1, -34, 2, 2);
-    }
-    // (Other characters will default to their colored blocky body which looks great on its own!)
-    ctx.restore();
-}
 
 function update() {
     if (isPaused) return;
@@ -370,7 +454,9 @@ function draw() {
 
     ctx.fillStyle = '#f59e0b'; ctx.fillRect(exitDoor.x, exitDoor.y, exitDoor.w, exitDoor.h);
     
-    drawTCharacter(player.x, player.y);
+    // Call our new advanced rendering function during gameplay!
+    drawAdvancedCharacter(ctx, player.x + 14, player.y + 38, equippedSkin, player.facingRight, player.scaleX, player.scaleY);
+    
     ctx.restore();
 }
 
