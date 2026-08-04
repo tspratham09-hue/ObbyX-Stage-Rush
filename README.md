@@ -1,43 +1,48 @@
-# 🏃‍♂️ ObbyX: Stage Rush
+# 🎮 PixelPlay Arena - Obby Stage Rush
 
-![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white)
-![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E)
-![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white)
+![Obby Stage Rush Gameplay](https://raw.githubusercontent.com/tspratham09-hue/PixelPlay-Arena/main/assets/preview.png) <!-- Optional: Replace with a link to your screenshot if available -->
 
-A fast-paced, 20-stage browser platformer built purely with native HTML5 Canvas, JavaScript, and the Web Audio API. Dodge lasers, leap across crumbling platforms, and collect coins to unlock custom character skins!
-
-🎮 **[PLAY THE GAME LIVE HERE](https://tspratham09-hue.github.io/ObbyX-Stage-Rush/)**
+Welcome to **Obby Stage Rush**, a fast-paced, multi-stage 2D platformer game built with HTML5, CSS3, and JavaScript! Complete challenging obstacle courses (obbies), dodge hazards, collect coins, unlock new character skins, and beat the clock across 15 custom neon-themed stages.
 
 ---
 
 ## ✨ Features
 
-* **20 Dynamic Stages:** Progress through 3 tiers of difficulty (Easy, Medium, Hard) across 5 unique visual biomes (Grassland, Desert, Ice, Lava, Cyber).
-* **Unlockable Skins:** Collect in-game coins to purchase cosmetic skins in the shop.
-* **Save Progression:** Utilizes `localStorage` to save your highest unlocked stage, coin balance, and equipped skins automatically.
-* **Interactive Hazards:** Navigate moving platforms, conveyor belts, bounce pads, timed crumbling blocks, and rotating lasers.
-* **Zero Dependencies:** Built from scratch without any external game engines or heavy libraries. Features a custom lightweight physics engine and particle system.
+* 🏃 **15 Unique Stages:** Progressively challenging levels ranging from synthwave jump puzzles to precision platforming.
+* 🛍️ **In-Game Shop & Skins:** Earn coins by playing and unlock custom character skins and colors in the shop.
+* ⏱️ **Speedrun Timer & Death Counter:** Track your time and attempt zero-death speedruns on every stage.
+* 💾 **Persistent Progress:** Your level unlocks, coin balance, high scores, and selected character skins save automatically in `localStorage`.
+* 🎨 **Neon Synthwave Aesthetic:** Clean canvas-rendered graphics with modern HUD design and responsive layout.
 
 ---
 
-## ⌨️ Controls
+## 🕹️ How to Play
 
-| Action | Keybinding |
-| :--- | :--- |
-| **Move Left/Right** | `A` / `D` or `Left` / `Right Arrows` |
-| **Jump / Double Jump** | `Space`, `W`, or `Up Arrow` |
-| **Respawn** | `R` |
-| **Open Shop** | `S` |
-| **Level Select** | `L` |
-| **Pause Game** | `ESC` |
-| **Mute Audio** | `M` |
+### Controls
+* **Move Left:** `A` or `Left Arrow`
+* **Move Right:** `D` or `Right Arrow`
+* **Jump / Double Jump:** `W`, `Spacebar`, or `Up Arrow`
+* **Pause / Menu:** `Esc`
+
+### Gameplay Objective
+1. Navigate across platforms and clear dangerous gaps.
+2. Reach the **flag checkpoint** to finish the stage.
+3. Collect golden coins along the way to spend in the **Shop**.
+4. Try to clear stages as quickly as possible with 0 deaths!
 
 ---
 
-## 🚀 How to Run Locally
+## 📁 File Structure
 
-If you want to download and modify the game yourself:
-
-1. Clone the repository:
-   ```bash
-   git clone [https://github.com/tspratham09-hue/ObbyX-Stage-Rush.git](https://github.com/tspratham09-hue/ObbyX-Stage-Rush.git)
+```text
+PixelPlay-Arena/
+│
+├── index.html        # Main Hub / Landing Page
+├── obby.html         # Obby Game Page (Canvas & UI Container)
+├── css/
+│   ├── style.css     # General styles & Hub UI
+│   └── obby.css      # Obby stage HUD, Shop overlays & Canvas styling
+└── js/
+    ├── game.js       # Game loop, physics engine, and player controls
+    ├── levels.js     # Level definitions and platform coordinates
+    └── shop.js       # Shop logic, skin manager & LocalStorage handler
