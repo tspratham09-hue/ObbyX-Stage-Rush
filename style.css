@@ -196,9 +196,8 @@ button:active { transform: scale(0.95); }
 
 .mobile-btn:active { background: rgba(255, 255, 255, 0.4); }
 
-/* Updated Media Query for Portrait, Landscape, and Touch Devices */
-@media (max-width: 850px), (max-height: 500px), (pointer: coarse) {
-    #mobile-controls { display: flex; }
+@media screen and (max-width: 1000px), screen and (max-height: 600px), (hover: none) and (pointer: coarse) {
+    #mobile-controls { display: flex !important; }
     .btn-row { top: 15px; bottom: auto; right: 15px; }
-    #ui-layer { display: none; } 
+    #ui-layer { display: none !important; } 
 }
