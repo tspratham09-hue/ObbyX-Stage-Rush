@@ -12,7 +12,7 @@
         
         /* UI Overlay */
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; padding: 15px; display: flex; justify-content: space-between; pointer-events: none; z-index: 10; }
-        .ui-box { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(8px); padding: 8px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); pointer-events: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+        .ui-box { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); padding: 8px 16px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.15); pointer-events: auto; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
         #top-left h2 { font-size: 18px; color: #f8fafc; text-shadow: 0 0 8px rgba(255,255,255,0.4); }
         #top-left p { font-size: 12px; color: #38bdf8; margin-top: 2px; font-weight: 600; }
         #top-center { font-size: 20px; font-weight: bold; color: #38bdf8; text-align: center; text-shadow: 0 0 10px rgba(56,189,248,0.6); display: flex; align-items: center; gap: 8px; }
@@ -238,11 +238,9 @@ function generateBackgroundScenery() {
     }
 }
 
-// 100% PERFECTLY PLAYABLE STAGES LOGIC
 function loadLevel(levelNum) {
     platforms = []; lavas = []; bouncePads = []; coinsList = []; checkpointsList = []; particles = []; movingPlatforms = []; fragilePlatforms = []; conveyors = [];
-    checkpoint = { x: 50, y: 350 };
-    player.x = checkpoint.x; player.y = checkpoint.y; player.vx = 0; player.vy = 0; cameraX = 0; bgTimer = 0;
+    cameraX = 0; bgTimer = 0;
     
     currentTheme = THEMES[(levelNum - 1) % THEMES.length];
     levelTitleUI.innerText = `Stage ${levelNum} / 15`;
@@ -301,12 +299,11 @@ function loadLevel(levelNum) {
         addP(820, 400, 150, 200); addCoin(860, 320); exitDoor = { x: 870, y: 335, w: 45, h: 65 };
     }
     else if(levelNum === 9) { // Leap of Faith
-        checkpoint = { x: 50, y: 150 }; player.x = 50; player.y = 150;
         addP(20, 200, 100, 350); addL(120, 450, 800, 150);
         addB(180, 420, 45); addB(350, 420, 45); addB(520, 420, 45); addB(690, 420, 45);
         addP(820, 260, 150, 300); addCoin(860, 200); exitDoor = { x: 870, y: 195, w: 45, h: 65 };
     }
-    else if(levelNum === 10) { // Boiling Ocean (100% FIXED RECOVERY!)
+    else if(levelNum === 10) { // Boiling Ocean (100% PERFECT RESPRAWN FIX)
         addP(20, 320, 100, 250); addL(120, 450, 800, 150);
         addMP(160, 320, 60, 20, 1.2, 0, 100); addMP(310, 290, 60, 20, 0, 1.2, 80);
         addP(430, 270, 80, 250); addC(450, 240); addCoin(470, 190);
@@ -347,6 +344,14 @@ function loadLevel(levelNum) {
         for(let i=0; i<8; i++) { addCoin(160 + (i*60), 360 - (i*25)); addP(140 + (i*60), 380 - (i*25), 45, 12); }
         addP(640, 200, 250, 400); exitDoor = { x: 720, y: 135, w: 45, h: 65 };
     }
+
+    // Dynamic Safe Checkpoint Calculation (Fixes infinite lava spawn!)
+    if (platforms.length > 0) {
+        checkpoint = { x: platforms[0].x + 20, y: platforms[0].y - player.height - 2 };
+    } else {
+        checkpoint = { x: 50, y: 300 };
+    }
+    player.x = checkpoint.x; player.y = checkpoint.y; player.vx = 0; player.vy = 0;
 }
 
 function die() {
@@ -383,6 +388,7 @@ function update() {
     if (keys['a'] || keys['arrowleft']) { player.vx -= 0.95; player.facingRight = false; }
     if (keys['d'] || keys['arrowright']) { player.vx += 0.95; player.facingRight = true; }
 
+    let prevY = player.y;
     player.vy += GRAVITY; 
     player.vx *= player.currentFriction; 
     player.x += player.vx; player.y += player.vy;
@@ -396,38 +402,46 @@ function update() {
     player.grounded = false;
     player.currentFriction = BASE_FRICTION;
 
-    // Standard & Ice Platforms
+    // Standard & Ice Platforms Collision (With Tunneling Prevention)
     platforms.forEach(p => {
         if (player.x + player.width > p.x && player.x < p.x + p.w) {
-            if (player.y + player.height >= p.y && player.y + player.height <= p.y + 22 && player.vy >= 0) {
+            let prevBottom = prevY + player.height;
+            let currentBottom = player.y + player.height;
+            if (prevBottom <= p.y + 12 && currentBottom >= p.y && player.vy >= 0) {
                 player.y = p.y - player.height; player.vy = 0; player.grounded = true; player.jumpsLeft = player.maxJumps;
                 if(p.isIce) player.currentFriction = ICE_FRICTION;
             }
         }
     });
 
-    // Conveyors
+    // Conveyors Collision
     conveyors.forEach(c => {
         if (player.x + player.width > c.x && player.x < c.x + c.w) {
-            if (player.y + player.height >= c.y && player.y + player.height <= c.y + 22 && player.vy >= 0) {
+            let prevBottom = prevY + player.height;
+            let currentBottom = player.y + player.height;
+            if (prevBottom <= c.y + 12 && currentBottom >= c.y && player.vy >= 0) {
                 player.y = c.y - player.height; player.vy = 0; player.grounded = true; player.jumpsLeft = player.maxJumps;
                 player.x += c.speed;
             }
         }
     });
 
-    // Moving Platforms
+    // Moving Platforms Collision
     movingPlatforms.forEach(mp => {
         mp.x += mp.vx; mp.y += mp.vy;
         mp.traveled += Math.abs(mp.vx) + Math.abs(mp.vy);
         if(mp.traveled >= mp.range) { mp.vx *= -1; mp.vy *= -1; mp.traveled = 0; }
-        if (player.x + player.width > mp.x && player.x < mp.x + mp.w && player.y + player.height >= mp.y && player.y + player.height <= mp.y + 22 && player.vy >= 0) {
-            player.y = mp.y - player.height; player.vy = 0; player.grounded = true; player.jumpsLeft = player.maxJumps;
-            player.x += mp.vx; player.y += mp.vy; 
+        if (player.x + player.width > mp.x && player.x < mp.x + mp.w) {
+            let prevBottom = prevY + player.height;
+            let currentBottom = player.y + player.height;
+            if (prevBottom <= mp.y + 14 && currentBottom >= mp.y && player.vy >= 0) {
+                player.y = mp.y - player.height; player.vy = 0; player.grounded = true; player.jumpsLeft = player.maxJumps;
+                player.x += mp.vx; player.y += mp.vy; 
+            }
         }
     });
 
-    // Fragile Platforms
+    // Fragile Platforms Collision
     fragilePlatforms.forEach(fp => {
         if(!fp.active) {
             fp.respawnTimer--;
@@ -435,8 +449,12 @@ function update() {
             return;
         }
         let playerStanding = false;
-        if (player.x + player.width > fp.x && player.x < fp.x + fp.w && player.y + player.height >= fp.y && player.y + player.height <= fp.y + 22 && player.vy >= 0) {
-            player.y = fp.y - player.height; player.vy = 0; player.grounded = true; player.jumpsLeft = player.maxJumps; playerStanding = true;
+        if (player.x + player.width > fp.x && player.x < fp.x + fp.w) {
+            let prevBottom = prevY + player.height;
+            let currentBottom = player.y + player.height;
+            if (prevBottom <= fp.y + 12 && currentBottom >= fp.y && player.vy >= 0) {
+                player.y = fp.y - player.height; player.vy = 0; player.grounded = true; player.jumpsLeft = player.maxJumps; playerStanding = true;
+            }
         }
         if(playerStanding || fp.timer < 60) {
             fp.timer--;
@@ -444,7 +462,7 @@ function update() {
         }
     });
 
-    // Bounce Pads
+    // Bounce Pads Collision
     bouncePads.forEach(b => {
         if (player.x + player.width > b.x && player.x < b.x + b.w && player.y + player.height >= b.y && player.y + player.height <= b.y + 20 && player.vy >= 0) {
             player.y = b.y - player.height; player.vy = -16.5; player.jumpsLeft = player.maxJumps; player.scaleX = 0.5; player.scaleY = 1.6;
@@ -452,7 +470,7 @@ function update() {
         }
     });
 
-    // Hazards & Death
+    // Hazards & Death Collision
     const pxCenter = player.x + player.width/2; 
     lavas.forEach(l => { if (pxCenter > l.x && pxCenter < l.x + l.w && player.y + player.height > l.y + 8) die(); });
     if (player.y > canvas.height + 150) die(); 
@@ -469,7 +487,7 @@ function update() {
         }
     });
 
-    // Exit Door
+    // Exit Door Collision
     if (player.x + player.width > exitDoor.x && player.x < exitDoor.x + exitDoor.w && player.y + player.height > exitDoor.y && player.y < exitDoor.y + exitDoor.h) {
         if(currentLevel === 15) {
             isPaused = true;
@@ -480,11 +498,11 @@ function update() {
         }
     }
 
-    // Particle FX
+    // Particle FX Updates
     particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.2; p.life -= 0.03; });
     particles = particles.filter(p => p.life > 0);
 
-    // Weather Particles FX
+    // Dynamic Ambient Particles FX
     ambientParticles.forEach(p => {
         p.x += p.speedX; p.y += p.speedY;
         if(p.y < 0) p.y = canvas.height;
@@ -506,7 +524,7 @@ function draw() {
     bgScenery.forEach(s => { ctx.fillRect(s.x - (cameraX * s.speed), s.y, s.w, s.h); });
     ctx.restore();
 
-    // Weather FX
+    // Weather FX Particles
     ctx.save();
     ambientParticles.forEach(p => {
         ctx.fillStyle = currentTheme.weather === 'embers' ? '#f97316' : currentTheme.weather === 'snow' ? '#ffffff' : currentTheme.weather === 'spores' ? '#84cc16' : '#38bdf8';
@@ -588,7 +606,7 @@ function draw() {
     particles.forEach(p => { ctx.fillStyle = p.color; ctx.globalAlpha = p.life; ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill(); });
     ctx.globalAlpha = 1;
 
-    // Draw Player
+    // Draw Player Character
     drawAdvancedCharacter(ctx, player.x + 13, player.y + 36, equippedSkin, player.facingRight, player.scaleX, player.scaleY);
     ctx.restore();
 }
