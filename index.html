@@ -3,79 +3,384 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Geometric Obby</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Obby Stage Rush - Easy Mode</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background: #0f172a; color: white; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #game-container { position: relative; width: 100vw; height: 100vh; max-width: 960px; max-height: 540px; background: #000; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        canvas { display: block; width: 100%; height: 100%; object-fit: contain; }
+        
+        /* UI Overlay */
+        #ui-layer { position: absolute; top: 0; left: 0; width: 100%; padding: 15px; display: flex; justify-content: space-between; pointer-events: none; }
+        .ui-box { background: rgba(15, 23, 42, 0.8); padding: 10px 15px; border-radius: 8px; border: 2px solid #334155; pointer-events: auto; }
+        #top-left h2 { font-size: 18px; color: #f8fafc; }
+        #top-left p { font-size: 12px; color: #94a3b8; margin-top: 5px; }
+        #top-center { font-size: 20px; font-weight: bold; color: #38bdf8; text-align: center; }
+        #top-right { text-align: right; }
+        #top-right p { font-size: 16px; margin-bottom: 5px; font-weight: bold; }
+        
+        /* Buttons */
+        .btn-row { position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px; pointer-events: auto; }
+        .action-btn { background: #3b82f6; color: white; border: none; padding: 10px 20px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; border-bottom: 4px solid #1d4ed8; transition: transform 0.1s; }
+        .action-btn:active { transform: translateY(4px); border-bottom: 0px; margin-top: 4px; }
+        .action-btn.shop { background: #f59e0b; border-color: #b45309; }
+
+        /* Modals */
+        .modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 100; pointer-events: auto; }
+        .hidden { display: none !important; }
+        .modal-content { background: #1e293b; padding: 30px; border-radius: 12px; width: 90%; max-width: 600px; text-align: center; border: 2px solid #475569; position: relative; max-height: 90%; overflow-y: auto; }
+        .modal-content h1 { margin-bottom: 20px; color: #f8fafc; }
+        .close-btn { position: absolute; top: 15px; right: 15px; background: #ef4444; border: none; color: white; width: 30px; height: 30px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        
+        /* Shop Grid */
+        #shop-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .shop-card { background: #334155; padding: 15px; border-radius: 8px; text-align: center; border: 2px solid transparent; transition: 0.2s; }
+        .shop-card.selected { border-color: #22c55e; background: #064e3b; }
+        .shop-preview { width: 40px; height: 60px; margin: 10px auto; border-radius: 4px; border: 2px solid rgba(0,0,0,0.3); }
+        .shop-card button { margin-top: 10px; width: 100%; padding: 8px; border: none; border-radius: 4px; background: #3b82f6; color: white; font-weight: bold; cursor: pointer; }
+        .shop-card button:disabled { background: #64748b; cursor: not-allowed; }
+
+        /* Mobile Controls */
+        #mobile-controls { position: absolute; bottom: 20px; left: 20px; width: calc(100% - 40px); display: none; justify-content: space-between; pointer-events: none; }
+        .d-pad { display: flex; gap: 10px; pointer-events: auto; }
+        .control-btn { width: 60px; height: 60px; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.5); border-radius: 50%; color: white; font-size: 24px; font-weight: bold; display: flex; justify-content: center; align-items: center; }
+        .control-btn:active { background: rgba(255,255,255,0.4); }
+        .action-pad { pointer-events: auto; }
+
+        @media (max-width: 768px) {
+            #mobile-controls { display: flex; }
+            .btn-row { top: 20px; bottom: auto; right: 20px; }
+            #ui-layer { display: none; } /* Hide complex UI on small screens to save space */
+        }
+    </style>
 </head>
 <body>
 
-    <!-- Top UI Bar -->
-    <div id="ui-bar">
-        <div class="ui-group">
-            <span id="level-title">Stage 1 / 15</span>
-            <span id="theme-name" class="sub-text">Theme: Gray Blocks</span>
+<div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="ui-layer">
+        <div class="ui-box" id="top-left">
+            <h2 id="level-title">Stage 1 / 15</h2>
+            <p id="theme-name">Theme: Neon Synthwave</p>
         </div>
-        <div class="ui-group center-text">
+        <div class="ui-box" id="top-center">
             <span id="timer-display">⏱️ 00:00</span>
         </div>
-        <div class="ui-group right-text">
-            <span id="coin-counter">🪙 0</span>
-            <span id="death-counter">☠️ 0</span>
+        <div class="ui-box" id="top-right">
+            <p id="coin-counter">🪙 0</p>
+            <p id="death-counter">☠️ 0</p>
         </div>
     </div>
 
-    <!-- Game Container -->
-    <div id="game-container">
-        <canvas id="gameCanvas"></canvas>
-
-        <!-- Start Modal -->
-        <div id="start-modal" class="modal">
-            <div class="modal-content">
-                <h1>GEOMETRIC OBBY</h1>
-                <p>Use W/A/S/D or Arrow Keys to move.</p>
-                <p>Press 'S' for Shop | 'L' for Levels | 'ESC' to Pause</p>
-                <button id="start-game-btn" class="action-btn">PLAY NOW</button>
-            </div>
-        </div>
-
-        <!-- Pause Modal -->
-        <div id="pause-modal" class="modal hidden">
-            <div class="modal-content">
-                <h2>PAUSED</h2>
-                <button id="resume-btn" class="action-btn">RESUME</button>
-            </div>
-        </div>
-
-        <!-- Shop Modal -->
-        <div id="shop-modal" class="modal hidden">
-            <div class="modal-content shop-content">
-                <h2>SKIN SHOP</h2>
-                <div id="shop-items"></div>
-                <button id="close-shop-btn" class="close-btn">CLOSE</button>
-            </div>
-        </div>
-
-        <!-- Level Modal -->
-        <div id="level-modal" class="modal hidden">
-            <div class="modal-content">
-                <h2>STAGE SELECT</h2>
-                <div id="level-grid"></div>
-                <button id="close-level-btn" class="close-btn">CLOSE</button>
-            </div>
-        </div>
+    <div class="btn-row">
+        <button class="action-btn shop" id="open-shop-btn">🛒 Shop</button>
     </div>
 
-    <!-- Mobile Controls (Only visible on small screens) -->
     <div id="mobile-controls">
-        <div class="control-cluster left-cluster">
-            <button id="btn-left" class="mobile-btn">◀</button>
-            <button id="btn-right" class="mobile-btn">▶</button>
+        <div class="d-pad">
+            <div class="control-btn" id="btn-left">◄</div>
+            <div class="control-btn" id="btn-right">►</div>
         </div>
-        <div class="control-cluster right-cluster">
-            <button id="btn-jump" class="mobile-btn">▲</button>
+        <div class="action-pad">
+            <div class="control-btn" id="btn-jump">▲</div>
         </div>
     </div>
 
-    <!-- Load Game Script with Cache Buster -->
-    <script src="game.js?v=300"></script>
+    <!-- Shop Modal -->
+    <div id="shop-modal" class="modal hidden">
+        <div class="modal-content">
+            <button class="close-btn" id="close-shop-btn">X</button>
+            <h1>Character Shop</h1>
+            <p style="margin-bottom: 20px; color: #cbd5e1;">Use coins found in levels to unlock new styles!</p>
+            <div id="shop-items"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = 960; canvas.height = 540;
+
+// UI Elements
+const levelTitleUI = document.getElementById('level-title');
+const coinCounterUI = document.getElementById('coin-counter');
+const deathCounterUI = document.getElementById('death-counter');
+const timerDisplayUI = document.getElementById('timer-display');
+const themeNameUI = document.getElementById('theme-name');
+
+const shopModal = document.getElementById('shop-modal');
+const openShopBtn = document.getElementById('open-shop-btn');
+const closeShopBtn = document.getElementById('close-shop-btn');
+const shopItemsContainer = document.getElementById('shop-items');
+
+// Audio Context
+let audioCtx = null;
+function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
+
+// SKINS
+const SKINS = [
+    { id: 'king', name: 'King', cost: 0, color: '#fde047', dark: '#ca8a04', type: 'king' },
+    { id: 'knight', name: 'Knight', cost: 10, color: '#84cc16', dark: '#4d7c0f', type: 'knight' },
+    { id: 'wizard', name: 'Wizard', cost: 25, color: '#3b82f6', dark: '#1d4ed8', type: 'wizard' },
+    { id: 'ninja', name: 'Ninja', cost: 50, color: '#a855f7', dark: '#7e22ce', type: 'ninja' },
+    { id: 'archer', name: 'Archer', cost: 75, color: '#f97316', dark: '#c2410c', type: 'archer' },
+    { id: 'chef', name: 'Chef', cost: 100, color: '#f8fafc', dark: '#94a3b8', type: 'chef' },
+    { id: 'pink', name: 'Bow Girl', cost: 150, color: '#f472b6', dark: '#be185d', type: 'pink' },
+    { id: 'gent', name: 'Gentleman', cost: 200, color: '#06b6d4', dark: '#0e7490', type: 'gent' },
+    { id: 'rapper', name: 'Rapper', cost: 250, color: '#94a3b8', dark: '#475569', type: 'rapper' },
+    { id: 'builder', name: 'Builder', cost: 300, color: '#b45309', dark: '#78350f', type: 'builder' }
+];
+
+let unlockedSkins = ['king'];
+let equippedSkin = SKINS[0];
+let coins = 0; let currentLevel = 1; let deaths = 0;
+let isPaused = false;
+
+// 🌟 EASIER PHYSICS: More jump force, less gravity, 3 jumps!
+const player = {
+    x: 50, y: 350, width: 28, height: 38,
+    vx: 0, vy: 0, speed: 5.5, jumpForce: -12.5, 
+    grounded: false, jumpsLeft: 3, maxJumps: 3, 
+    facingRight: true, scaleX: 1, scaleY: 1
+};
+const GRAVITY = 0.45; 
+const FRICTION = 0.85; 
+
+let checkpoint = { x: 50, y: 350 };
+let keys = {};
+let platforms = []; let hazards = []; let coinsList = []; let checkpointsList = []; let exitDoor = { x: 880, y: 300, w: 45, h: 65 };
+let cameraX = 0; let bgTimer = 0; let startTime = Date.now();
+
+const THEMES = [
+    { id: 'neon', name: "Neon Synthwave", sky: ["#1e1b4b", "#311042"], platform: "#22d3ee", base: "#0891b2" }, 
+    { id: 'lava', name: "Lava Core", sky: ["#450a0a", "#180202"], platform: "#dc2626", base: "#7f1d1d" }
+];
+let currentTheme = THEMES[0];
+
+function loadProgress() {
+    coins = parseInt(localStorage.getItem('obby_coins') || '0');
+    unlockedSkins = JSON.parse(localStorage.getItem('obby_skins') || '["king"]');
+    const equippedId = localStorage.getItem('obby_equippedSkin') || 'king';
+    equippedSkin = SKINS.find(s => s.id === equippedId) || SKINS[0];
+}
+function saveProgress() {
+    localStorage.setItem('obby_coins', coins.toString());
+    localStorage.setItem('obby_skins', JSON.stringify(unlockedSkins));
+    localStorage.setItem('obby_equippedSkin', equippedSkin.id);
+}
+
+openShopBtn.onclick = () => { isPaused = true; shopModal.classList.remove('hidden'); renderShop(); };
+closeShopBtn.onclick = () => { isPaused = false; shopModal.classList.add('hidden'); };
+
+function renderShop() {
+    shopItemsContainer.innerHTML = '';
+    SKINS.forEach(skin => {
+        const isUnlocked = unlockedSkins.includes(skin.id);
+        const isEquipped = equippedSkin.id === skin.id;
+        const card = document.createElement('div');
+        card.className = `shop-card ${isEquipped ? 'selected' : ''}`;
+        card.innerHTML = `<h4>${skin.name}</h4><div class="shop-preview" style="background: ${skin.color}"></div><p>${isUnlocked ? 'Owned' : '🪙 ' + skin.cost}</p><button ${isEquipped ? 'disabled' : ''}>${isEquipped ? 'Equipped' : isUnlocked ? 'Equip' : 'Buy'}</button>`;
+        card.querySelector('button').onclick = () => {
+            if (isUnlocked) equippedSkin = skin;
+            else if (coins >= skin.cost) { coins -= skin.cost; unlockedSkins.push(skin.id); equippedSkin = skin; }
+            saveProgress(); renderShop();
+        };
+        shopItemsContainer.appendChild(card);
+    });
+    coinCounterUI.innerText = `🪙 ${coins}`;
+}
+
+// 🌟 EASIER LEVELS: Wider platforms, fewer hazards
+function loadLevel(levelNum) {
+    platforms = []; hazards = []; coinsList = []; checkpointsList = [];
+    checkpoint = { x: 50, y: 350 };
+    player.x = checkpoint.x; player.y = checkpoint.y; player.vx = 0; player.vy = 0;
+    cameraX = 0;
+    currentTheme = THEMES[(levelNum - 1) % THEMES.length];
+    
+    levelTitleUI.innerText = `Stage ${levelNum} / 15`;
+    themeNameUI.innerText = `Theme: ${currentTheme.name}`;
+
+    const addP = (x, y, w, h) => platforms.push({ x, y, w, h });
+    const addC = (x, y) => checkpointsList.push({ x, y, w: 20, h: 30, reached: false });
+    const addCoin = (x, y) => coinsList.push({ x, y, collected: false });
+
+    // Base start platform
+    addP(20, 400, 160, 200); 
+
+    let cx = 0; let cy = 0;
+    
+    if(levelNum === 1) {
+        addP(220, 400, 160, 200); addCoin(300, 360);
+        addP(420, 360, 160, 200); addC(480, 330);
+        addP(620, 360, 160, 200);
+        addP(820, 380, 160, 200);
+        cx = 1050; cy = 400;
+    } else {
+        // Generic easy generator for subsequent levels just for demonstration
+        addP(250, 400, 150, 200); 
+        addP(450, 350, 150, 200); addC(500, 320);
+        addP(700, 350, 150, 200);
+        addP(950, 380, 150, 200);
+        cx = 1200; cy = 380;
+    }
+
+    addP(cx, cy, 180, 200); // Big end platform
+    exitDoor = { x: cx + 80, y: cy - 65, w: 45, h: 65 };
+}
+
+function triggerJump() {
+    if (player.jumpsLeft > 0 && !isPaused) {
+        player.vy = player.jumpForce;
+        player.jumpsLeft--;
+        player.grounded = false;
+        player.scaleX = 0.8; player.scaleY = 1.2;
+    }
+}
+
+window.addEventListener('keydown', (e) => {
+    initAudio(); keys[e.key.toLowerCase()] = true;
+    if (e.code === 'Space' || e.key.toLowerCase() === 'w' || e.code === 'ArrowUp') triggerJump();
+});
+window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
+
+// Mobile Controls Setup
+const attachBtn = (id, key) => {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.addEventListener('pointerdown', (e) => { e.preventDefault(); initAudio(); keys[key] = true; if(key==='space') triggerJump(); });
+    el.addEventListener('pointerup', (e) => { e.preventDefault(); keys[key] = false; });
+    el.addEventListener('pointercancel', (e) => { e.preventDefault(); keys[key] = false; });
+};
+attachBtn('btn-left', 'arrowleft');
+attachBtn('btn-right', 'arrowright');
+attachBtn('btn-jump', 'space');
+
+
+function drawTCharacter(x, y) {
+    ctx.save();
+    ctx.translate(x + 14, y + 38);
+    ctx.scale(player.facingRight ? player.scaleX : -player.scaleX, player.scaleY);
+    
+    // Body
+    ctx.fillStyle = equippedSkin.color;
+    ctx.fillRect(-8, -38, 16, 12); // Head
+    ctx.fillRect(-14, -26, 28, 9); // Arms/Chest
+    ctx.fillRect(-7, -17, 14, 17); // Legs
+
+    // Shading & Eyes
+    ctx.fillStyle = equippedSkin.dark;
+    ctx.fillRect(4, -38, 4, 12);
+    ctx.fillRect(9, -26, 5, 9);
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(-4, -34, 3, 3);
+    ctx.fillRect(2, -34, 3, 3);
+
+    const type = equippedSkin.type;
+    // Accessories based on selected character
+    if (type === 'king') {
+        ctx.fillStyle = '#fbbf24'; ctx.fillRect(-9, -42, 18, 4); 
+        ctx.fillRect(-9, -45, 4, 3); ctx.fillRect(-2, -45, 4, 3); ctx.fillRect(5, -45, 4, 3);
+    } else if (type === 'ninja') {
+        ctx.fillStyle = '#000000'; ctx.fillRect(-9, -36, 18, 6);
+        ctx.fillStyle = equippedSkin.color; ctx.fillRect(-4, -34, 8, 3);
+        ctx.fillStyle = '#000000'; ctx.fillRect(-3, -34, 2, 2); ctx.fillRect(1, -34, 2, 2);
+    }
+    // (Other characters will default to their colored blocky body which looks great on its own!)
+    ctx.restore();
+}
+
+function update() {
+    if (isPaused) return;
+
+    if (keys['a'] || keys['arrowleft']) { player.vx -= 1.0; player.facingRight = false; }
+    if (keys['d'] || keys['arrowright']) { player.vx += 1.0; player.facingRight = true; }
+
+    player.vy += GRAVITY; player.vx *= FRICTION;
+    player.x += player.vx; player.y += player.vy;
+
+    player.scaleX += (1 - player.scaleX) * 0.15;
+    player.scaleY += (1 - player.scaleY) * 0.15;
+
+    let targetCameraX = player.x - (canvas.width / 3);
+    cameraX += (targetCameraX - cameraX) * 0.1;
+    if (cameraX < 0) cameraX = 0;
+
+    player.grounded = false;
+    platforms.forEach(p => {
+        if (player.x + player.width > p.x && player.x < p.x + p.w) {
+            if (player.y + player.height >= p.y && player.y + player.height <= p.y + 20 && player.vy >= 0) {
+                player.y = p.y - player.height;
+                player.vy = 0;
+                player.grounded = true;
+                player.jumpsLeft = player.maxJumps;
+            }
+        }
+    });
+
+    checkpointsList.forEach(cp => {
+        if (!cp.reached && player.x + player.width > cp.x && player.x < cp.x + cp.w && player.y + player.height > cp.y && player.y < cp.y + cp.h) {
+            cp.reached = true; checkpoint = { x: cp.x + 4, y: cp.y + cp.h - player.height - 2 };
+        }
+    });
+
+    coinsList.forEach(c => {
+        if (!c.collected && Math.hypot((player.x + 14) - c.x, (player.y + 19) - c.y) < 25) {
+            c.collected = true; coins++; saveProgress(); coinCounterUI.innerText = `🪙 ${coins}`;
+        }
+    });
+
+    if (player.y > canvas.height + 100) {
+        deaths++; deathCounterUI.innerText = `☠️ ${deaths}`;
+        player.x = checkpoint.x; player.y = checkpoint.y; player.vx = 0; player.vy = 0;
+    }
+
+    if (player.x + player.width > exitDoor.x && player.x < exitDoor.x + exitDoor.w &&
+        player.y + player.height > exitDoor.y && player.y < exitDoor.y + exitDoor.h) {
+        currentLevel++; loadLevel(currentLevel);
+    }
+}
+
+function draw() {
+    bgTimer += 0.02;
+    let skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    skyGrad.addColorStop(0, currentTheme.sky[0]); skyGrad.addColorStop(1, currentTheme.sky[1]);
+    ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.save(); ctx.translate(-Math.floor(cameraX), 0);
+    
+    platforms.forEach(p => {
+        ctx.fillStyle = currentTheme.platform; ctx.fillRect(p.x, p.y, p.w, p.h);
+        ctx.fillStyle = currentTheme.base; ctx.fillRect(p.x, p.y + 10, p.w, p.h - 10);
+    });
+
+    checkpointsList.forEach(cp => {
+        ctx.fillStyle = '#64748b'; ctx.fillRect(cp.x, cp.y, 4, cp.h);
+        ctx.fillStyle = cp.reached ? '#22c55e' : '#cbd5e1';
+        ctx.beginPath(); ctx.moveTo(cp.x + 4, cp.y); ctx.lineTo(cp.x + 20, cp.y + 5); ctx.lineTo(cp.x + 4, cp.y + 12); ctx.fill();
+    });
+
+    coinsList.forEach(c => {
+        if (!c.collected) {
+            ctx.fillStyle = '#facc15'; ctx.beginPath(); ctx.arc(c.x, c.y + Math.sin(bgTimer*5)*3, 8, 0, Math.PI * 2); ctx.fill();
+        }
+    });
+
+    ctx.fillStyle = '#f59e0b'; ctx.fillRect(exitDoor.x, exitDoor.y, exitDoor.w, exitDoor.h);
+    
+    drawTCharacter(player.x, player.y);
+    ctx.restore();
+}
+
+function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
+
+loadProgress();
+coinCounterUI.innerText = `🪙 ${coins}`;
+loadLevel(currentLevel);
+gameLoop();
+
+</script>
 </body>
 </html>
