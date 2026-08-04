@@ -59,11 +59,30 @@ function playSFX(type) {
     }
 }
 
+// 🌟 NEW CHARACTER SKINS ADDED HERE
+const SKINS = [
+    { id: 'king', name: 'King', cost: 0, color: '#fde047', dark: '#ca8a04', type: 'king' },
+    { id: 'knight', name: 'Knight', cost: 10, color: '#84cc16', dark: '#4d7c0f', type: 'knight' },
+    { id: 'wizard', name: 'Wizard', cost: 25, color: '#3b82f6', dark: '#1d4ed8', type: 'wizard' },
+    { id: 'ninja', name: 'Ninja', cost: 50, color: '#a855f7', dark: '#7e22ce', type: 'ninja' },
+    { id: 'archer', name: 'Archer', cost: 75, color: '#f97316', dark: '#c2410c', type: 'archer' },
+    { id: 'chef', name: 'Chef', cost: 100, color: '#f8fafc', dark: '#94a3b8', type: 'chef' },
+    { id: 'pink', name: 'Bow Girl', cost: 150, color: '#f472b6', dark: '#be185d', type: 'pink' },
+    { id: 'gent', name: 'Gentleman', cost: 200, color: '#06b6d4', dark: '#0e7490', type: 'gent' },
+    { id: 'rapper', name: 'Rapper', cost: 250, color: '#94a3b8', dark: '#475569', type: 'rapper' },
+    { id: 'builder', name: 'Builder', cost: 300, color: '#b45309', dark: '#78350f', type: 'builder' }
+];
+
+let unlockedSkins = ['king'];
+let equippedSkin = SKINS[0];
+let coins = 0;
+let maxUnlockedLevel = 1;
+
 function loadProgress() {
     coins = parseInt(localStorage.getItem('obby_coins') || '0');
     maxUnlockedLevel = parseInt(localStorage.getItem('obby_maxLevel') || '1');
-    unlockedSkins = JSON.parse(localStorage.getItem('obby_skins') || '["yellow"]');
-    const equippedId = localStorage.getItem('obby_equippedSkin') || 'yellow';
+    unlockedSkins = JSON.parse(localStorage.getItem('obby_skins') || '["king"]');
+    const equippedId = localStorage.getItem('obby_equippedSkin') || 'king';
     equippedSkin = SKINS.find(s => s.id === equippedId) || SKINS[0];
 }
 
@@ -77,10 +96,8 @@ function saveProgress() {
 // Global Game State
 let isStartMenu = true;
 let currentLevel = 1;
-let maxUnlockedLevel = 1;
 const TOTAL_LEVELS = 15; 
 let deaths = 0;
-let coins = 0;
 let startTime = Date.now();
 let isGameWon = false;
 let isPaused = false;
@@ -88,7 +105,6 @@ let screenShake = 0;
 let bgTimer = 0;
 let cameraX = 0;
 
-// Background Animation Elements (Ember, Stars, Digital Particles)
 let bgParticles = [];
 function initBgParticles() {
     bgParticles = [];
@@ -105,26 +121,16 @@ function initBgParticles() {
 }
 initBgParticles();
 
-const SKINS = [
-    { id: 'yellow', name: 'Yellow', cost: 0, color: '#fde047', dark: '#ca8a04' },
-    { id: 'red', name: 'Ruby', cost: 10, color: '#ef4444', dark: '#991b1b' },
-    { id: 'green', name: 'Emerald', cost: 25, color: '#10b981', dark: '#065f46' },
-    { id: 'purple', name: 'Cyber', cost: 50, color: '#a855f7', dark: '#581c87' },
-    { id: 'black', name: 'Shadow', cost: 100, color: '#334155', dark: '#0f172a' }
-];
-let unlockedSkins = ['yellow'];
-let equippedSkin = SKINS[0];
-
 const player = {
     x: 50, y: 350, width: 28, height: 38,
-    vx: 0, vy: 0, speed: 4.8, jumpForce: -11,
+    vx: 0, vy: 0, speed: 5.0, jumpForce: -11.5, // slightly buffed for mobile ease
     grounded: false, jumpsLeft: 2, maxJumps: 2,
     facingRight: true, scaleX: 1, scaleY: 1
 };
 
 let checkpoint = { x: 50, y: 350 };
 const GRAVITY = 0.52;
-const FRICTION = 0.82;
+const FRICTION = 0.80; // better handling
 let keys = {};
 
 let platforms = [];
@@ -135,7 +141,6 @@ let lasers = [];
 let particles = [];
 let exitDoor = { x: 880, y: 300, w: 45, h: 65 };
 
-// 🎯 ADVANCED GAMING THEMES
 const THEMES = [
     { id: 'neon', name: "Neon Synthwave", sky: ["#1e1b4b", "#311042"], platform: "#22d3ee", base: "#0891b2" }, 
     { id: 'lava', name: "Lava Core", sky: ["#450a0a", "#180202"], platform: "#dc2626", base: "#7f1d1d" },
@@ -158,7 +163,6 @@ function spawnParticles(x, y, count, color, type = 'dust') {
     }
 }
 
-// 🎯 LONGER STAGES WITH MORE VARIETY
 function loadLevel(levelNum) {
     platforms = []; hazards = []; coinsList = []; checkpointsList = []; lasers = [];
     checkpoint = { x: 50, y: 350 };
@@ -175,246 +179,152 @@ function loadLevel(levelNum) {
     const addCoin = (x, y) => coinsList.push({ x, y, collected: false });
     const addL = (cx, cy, length, speed) => lasers.push({ cx, cy, length, angle: 0, speed });
 
-    // Start Platform
     addP(20, 400, 120, 200);
+    let cx = 160; let cy = 400;
 
-    let cx = 160; 
-    let cy = 400;
-
-    // Build unique, multi-section long levels
     switch (levelNum) {
-        case 1: // Long Introduction with Spikes
-            addP(180, 400, 140, 200);
-            addH('spike', 230, 380, 40, 20);
-            addP(370, 360, 120, 200);
-            addC(410, 330);
-            addP(540, 360, 140, 200);
-            addH('spike', 580, 340, 50, 20);
-            addP(730, 380, 120, 200);
-            addC(770, 350);
-            addP(900, 380, 140, 200);
-            addH('lava', 940, 340, 40, 40);
+        case 1: 
+            addP(180, 400, 140, 200); addH('spike', 230, 380, 40, 20);
+            addP(370, 360, 120, 200); addC(410, 330);
+            addP(540, 360, 140, 200); addH('spike', 580, 340, 50, 20);
+            addP(730, 380, 120, 200); addC(770, 350);
+            addP(900, 380, 140, 200); addH('lava', 940, 340, 40, 40);
             addP(1090, 400, 140, 200);
-            cx = 1280; cy = 400;
-            break;
-
-        case 2: // Spike Alley & Saw Introduction
-            addP(180, 400, 120, 200);
-            addH('saw', 320, 340, 45, 45);
-            addP(380, 400, 120, 200);
-            addC(420, 370);
-            addP(550, 360, 120, 200);
-            addH('spike', 580, 340, 60, 20);
-            addP(720, 320, 120, 200);
-            addH('saw', 860, 260, 45, 45);
-            addC(900, 290);
-            addP(900, 320, 120, 200);
-            addP(1070, 360, 120, 200);
-            addH('spike', 1100, 340, 50, 20);
+            cx = 1280; cy = 400; break;
+        case 2: 
+            addP(180, 400, 120, 200); addH('saw', 320, 340, 45, 45);
+            addP(380, 400, 120, 200); addC(420, 370);
+            addP(550, 360, 120, 200); addH('spike', 580, 340, 60, 20);
+            addP(720, 320, 120, 200); addH('saw', 860, 260, 45, 45);
+            addC(900, 290); addP(900, 320, 120, 200);
+            addP(1070, 360, 120, 200); addH('spike', 1100, 340, 50, 20);
             addP(1240, 400, 140, 200);
-            cx = 1430; cy = 400;
-            break;
-
-        case 3: // Crumbling Bridge & Saws
+            cx = 1430; cy = 400; break;
+        case 3: 
             for (let i = 0; i < 5; i++) {
                 addP(180 + (i * 90), 400, 75, 200, 'crumbling', null, { touched: false, timer: 35, destroyed: false });
                 if (i === 2) addCoin(180 + (i * 90) + 25, 350);
             }
-            addC(650, 370);
-            addP(630, 400, 120, 200);
-            addH('saw', 780, 350, 50, 50);
-            addP(860, 400, 120, 200);
+            addC(650, 370); addP(630, 400, 120, 200);
+            addH('saw', 780, 350, 50, 50); addP(860, 400, 120, 200);
             for (let i = 0; i < 4; i++) {
                 addP(1020 + (i * 90), 400, 75, 200, 'crumbling', null, { touched: false, timer: 30, destroyed: false });
             }
-            addC(1400, 370);
-            addP(1380, 400, 140, 200);
-            addH('spike', 1420, 380, 60, 20);
-            addP(1570, 400, 140, 200);
-            cx = 1760; cy = 400;
-            break;
-
-        case 4: // Vertical & Horizontal Movers
+            addC(1400, 370); addP(1380, 400, 140, 200);
+            addH('spike', 1420, 380, 60, 20); addP(1570, 400, 140, 200);
+            cx = 1760; cy = 400; break;
+        case 4: 
             addP(180, 400, 100, 20, 'moving', { axis: 'x', dir: 1, range: 60, startX: 180, speed: 1.2 });
-            addP(380, 350, 100, 200);
-            addC(410, 320);
+            addP(380, 350, 100, 200); addC(410, 320);
             addP(530, 350, 90, 20, 'moving', { axis: 'y', dir: -1, range: 70, startY: 350, speed: 1 });
-            addP(670, 240, 110, 200);
-            addH('spike', 700, 220, 50, 20);
+            addP(670, 240, 110, 200); addH('spike', 700, 220, 50, 20);
             addC(800, 210);
             addP(830, 240, 100, 20, 'moving', { axis: 'x', dir: 1, range: 70, startX: 830, speed: 1.5 });
-            addP(1050, 280, 120, 200);
-            addH('saw', 1200, 240, 50, 50);
+            addP(1050, 280, 120, 200); addH('saw', 1200, 240, 50, 50);
             addP(1280, 350, 140, 200);
-            cx = 1470; cy = 350;
-            break;
-
-        case 5: // Bounce Pads & High Jumps
-            addP(180, 450, 80, 200, 'bounce');
-            addP(320, 280, 100, 200);
-            addH('spike', 340, 260, 40, 20);
-            addC(360, 250);
-            addP(460, 450, 80, 200, 'bounce');
-            addP(600, 240, 100, 200);
-            addH('saw', 730, 200, 50, 50);
-            addC(820, 210);
-            addP(800, 240, 100, 200);
-            addP(940, 450, 80, 200, 'bounce');
+            cx = 1470; cy = 350; break;
+        case 5: 
+            addP(180, 450, 80, 200, 'bounce'); addP(320, 280, 100, 200);
+            addH('spike', 340, 260, 40, 20); addC(360, 250);
+            addP(460, 450, 80, 200, 'bounce'); addP(600, 240, 100, 200);
+            addH('saw', 730, 200, 50, 50); addC(820, 210);
+            addP(800, 240, 100, 200); addP(940, 450, 80, 200, 'bounce');
             addP(1080, 250, 140, 200);
-            cx = 1270; cy = 250;
-            break;
-
-        case 6: // Giant Lava Sea
-            addH('lava', 120, 480, 1400, 100);
-            addP(180, 400, 80, 20);
+            cx = 1270; cy = 250; break;
+        case 6: 
+            addH('lava', 120, 480, 1400, 100); addP(180, 400, 80, 20);
             addP(310, 380, 80, 20, 'moving', { axis: 'x', dir: 1, range: 50, startX: 310, speed: 1.2 });
-            addC(430, 350);
-            addP(430, 380, 80, 20);
-            addH('saw', 550, 320, 45, 45);
-            addP(630, 380, 80, 20);
+            addC(430, 350); addP(430, 380, 80, 20);
+            addH('saw', 550, 320, 45, 45); addP(630, 380, 80, 20);
             addC(750, 350);
             addP(750, 380, 80, 20, 'moving', { axis: 'y', dir: -1, range: 60, startY: 380, speed: 1 });
             addP(890, 280, 80, 20);
             addP(1030, 320, 80, 20, 'moving', { axis: 'x', dir: -1, range: 60, startX: 1030, speed: 1.5 });
             addP(1200, 380, 140, 200);
-            cx = 1390; cy = 380;
-            break;
-
-        case 7: // Laser Corridors
-            addP(180, 400, 160, 200);
-            addL(260, 300, 80, 0.025);
-            addC(360, 370);
-            addP(380, 400, 160, 200);
-            addL(460, 300, 80, -0.025);
-            addP(580, 400, 160, 200);
-            addH('spike', 620, 380, 80, 20);
-            addC(760, 370);
-            addP(780, 400, 160, 200);
-            addL(860, 300, 90, 0.03);
+            cx = 1390; cy = 380; break;
+        case 7: 
+            addP(180, 400, 160, 200); addL(260, 300, 80, 0.025);
+            addC(360, 370); addP(380, 400, 160, 200);
+            addL(460, 300, 80, -0.025); addP(580, 400, 160, 200);
+            addH('spike', 620, 380, 80, 20); addC(760, 370);
+            addP(780, 400, 160, 200); addL(860, 300, 90, 0.03);
             addP(990, 400, 140, 200);
-            cx = 1180; cy = 400;
-            break;
-
-        case 8: // Precision Spikes & Crumble
+            cx = 1180; cy = 400; break;
+        case 8: 
             addP(180, 400, 60, 200); addH('spike', 240, 380, 60, 20);
             addP(300, 400, 60, 200); addC(310, 370);
-            for (let i = 0; i < 3; i++) {
-                addP(400 + (i * 80), 400, 60, 200, 'crumbling', null, { touched: false, timer: 25, destroyed: false });
-            }
-            addC(660, 370);
-            addP(650, 400, 80, 200);
-            addH('saw', 760, 340, 50, 50);
-            addP(840, 400, 60, 200); addH('spike', 900, 380, 60, 20);
-            addP(960, 400, 120, 200);
-            cx = 1130; cy = 400;
-            break;
-
-        case 9: // Elevator Towers & Lasers
+            for (let i = 0; i < 3; i++) { addP(400 + (i * 80), 400, 60, 200, 'crumbling', null, { touched: false, timer: 25, destroyed: false }); }
+            addC(660, 370); addP(650, 400, 80, 200);
+            addH('saw', 760, 340, 50, 50); addP(840, 400, 60, 200); 
+            addH('spike', 900, 380, 60, 20); addP(960, 400, 120, 200);
+            cx = 1130; cy = 400; break;
+        case 9: 
             addP(180, 400, 80, 20, 'moving', { axis: 'y', dir: -1, range: 90, startY: 330, speed: 0.8 });
-            addP(310, 220, 100, 200);
-            addL(360, 140, 70, 0.03);
-            addC(340, 190);
-            addP(460, 220, 80, 20, 'moving', { axis: 'x', dir: 1, range: 60, startX: 460, speed: 1.2 });
-            addP(640, 260, 100, 200);
-            addH('saw', 770, 220, 50, 50);
-            addC(860, 230);
-            addP(850, 260, 80, 20, 'moving', { axis: 'y', dir: 1, range: 80, startY: 320, speed: 1 });
+            addP(310, 220, 100, 200); addL(360, 140, 70, 0.03);
+            addC(340, 190); addP(460, 220, 80, 20, 'moving', { axis: 'x', dir: 1, range: 60, startX: 460, speed: 1.2 });
+            addP(640, 260, 100, 200); addH('saw', 770, 220, 50, 50);
+            addC(860, 230); addP(850, 260, 80, 20, 'moving', { axis: 'y', dir: 1, range: 80, startY: 320, speed: 1 });
             addP(1000, 380, 140, 200);
-            cx = 1190; cy = 380;
-            break;
-
-        case 10: // The Mixed Marathon (Part 1)
+            cx = 1190; cy = 380; break;
+        case 10: 
             addP(180, 400, 80, 20, 'crumbling', null, { touched: false, timer: 30, destroyed: false });
             addP(290, 400, 60, 20, 'bounce');
-            addP(400, 250, 100, 200); addH('spike', 430, 230, 40, 20);
-            addC(430, 220);
+            addP(400, 250, 100, 200); addH('spike', 430, 230, 40, 20); addC(430, 220);
             addP(540, 250, 80, 20, 'moving', { axis: 'x', dir: 1, range: 60, startX: 540, speed: 1.2 });
-            addL(680, 180, 75, 0.035);
-            addP(750, 250, 100, 200);
-            addC(780, 220);
-            addP(890, 450, 80, 200, 'bounce');
-            addP(1030, 280, 140, 200);
-            cx = 1220; cy = 280;
-            break;
-
-        case 11: // Sawblade Symphony
-            addP(180, 400, 120, 200);
-            addH('saw', 320, 330, 55, 55);
-            addP(400, 400, 120, 200);
-            addC(440, 370);
-            addH('saw', 540, 330, 55, 55);
-            addP(620, 400, 120, 200);
-            addH('saw', 760, 330, 55, 55);
-            addC(840, 370);
-            addP(840, 400, 120, 200);
-            addH('saw', 980, 330, 55, 55);
+            addL(680, 180, 75, 0.035); addP(750, 250, 100, 200); addC(780, 220);
+            addP(890, 450, 80, 200, 'bounce'); addP(1030, 280, 140, 200);
+            cx = 1220; cy = 280; break;
+        case 11: 
+            addP(180, 400, 120, 200); addH('saw', 320, 330, 55, 55);
+            addP(400, 400, 120, 200); addC(440, 370);
+            addH('saw', 540, 330, 55, 55); addP(620, 400, 120, 200);
+            addH('saw', 760, 330, 55, 55); addC(840, 370);
+            addP(840, 400, 120, 200); addH('saw', 980, 330, 55, 55);
             addP(1060, 400, 140, 200);
-            cx = 1250; cy = 400;
-            break;
-
-        case 12: // Moving Laser Platforms
+            cx = 1250; cy = 400; break;
+        case 12: 
             addP(180, 400, 100, 200, 'moving', { axis: 'x', dir: 1, range: 50, startX: 180, speed: 1.2 });
-            addL(230, 300, 75, 0.03);
-            addC(360, 370);
-            addP(350, 400, 120, 200);
-            addH('spike', 380, 380, 60, 20);
+            addL(230, 300, 75, 0.03); addC(360, 370);
+            addP(350, 400, 120, 200); addH('spike', 380, 380, 60, 20);
             addP(510, 400, 100, 200, 'moving', { axis: 'x', dir: -1, range: 50, startX: 510, speed: 1.2 });
-            addL(560, 300, 75, -0.03);
-            addC(700, 370);
-            addP(690, 400, 120, 200);
-            addH('saw', 830, 320, 50, 50);
+            addL(560, 300, 75, -0.03); addC(700, 370);
+            addP(690, 400, 120, 200); addH('saw', 830, 320, 50, 50);
             addP(910, 400, 140, 200);
-            cx = 1100; cy = 400;
-            break;
-
-        case 13: // The Sky Climb
-            addP(180, 450, 70, 20, 'bounce');
-            addP(280, 300, 80, 20);
+            cx = 1100; cy = 400; break;
+        case 13: 
+            addP(180, 450, 70, 20, 'bounce'); addP(280, 300, 80, 20);
             addP(390, 200, 80, 20, 'moving', { axis: 'x', dir: 1, range: 40, startX: 390, speed: 1 });
-            addC(500, 170);
-            addP(500, 200, 100, 200);
-            addH('spike', 520, 180, 50, 20);
-            addP(640, 350, 70, 20, 'bounce');
+            addC(500, 170); addP(500, 200, 100, 200);
+            addH('spike', 520, 180, 50, 20); addP(640, 350, 70, 20, 'bounce');
             addP(750, 220, 80, 20, 'moving', { axis: 'y', dir: -1, range: 60, startY: 220, speed: 1 });
             addP(880, 160, 140, 200);
-            cx = 1070; cy = 160;
-            break;
-
-        case 14: // Ultimate Precision Corridor
+            cx = 1070; cy = 160; break;
+        case 14: 
             addP(180, 420, 80, 200); addL(220, 370, 45, 0.04);
             addP(300, 360, 80, 200); addH('saw', 400, 300, 50, 50);
-            addC(430, 330);
-            addP(430, 360, 80, 20, 'crumbling', null, { touched: false, timer: 20, destroyed: false });
-            addH('spike', 530, 340, 60, 20);
-            addP(610, 360, 80, 200);
-            addC(640, 330);
-            addP(730, 360, 70, 20, 'bounce');
+            addC(430, 330); addP(430, 360, 80, 20, 'crumbling', null, { touched: false, timer: 20, destroyed: false });
+            addH('spike', 530, 340, 60, 20); addP(610, 360, 80, 200);
+            addC(640, 330); addP(730, 360, 70, 20, 'bounce');
             addP(840, 220, 140, 200);
-            cx = 1030; cy = 220;
-            break;
-
-        case 15: // 🏆 THE GRAND MASTER GAUNTLET
-            addP(160, 400, 80, 20); 
-            addH('saw', 260, 340, 50, 50);
+            cx = 1030; cy = 220; break;
+        case 15: 
+            addP(160, 400, 80, 20); addH('saw', 260, 340, 50, 50);
             addP(320, 400, 60, 20, 'crumbling', null, { touched: false, timer: 25, destroyed: false });
-            addP(430, 450, 60, 20, 'bounce');
-            addC(540, 250);
-            addP(520, 280, 100, 200); 
-            addH('spike', 540, 260, 50, 20);
+            addP(430, 450, 60, 20, 'bounce'); addC(540, 250);
+            addP(520, 280, 100, 200); addH('spike', 540, 260, 50, 20);
             addP(660, 280, 80, 20, 'moving', { axis: 'x', dir: 1, range: 50, startX: 660, speed: 1.5 });
-            addL(780, 200, 65, 0.05);
-            addC(880, 250);
-            addP(860, 280, 80, 200);
-            addH('saw', 970, 220, 55, 55);
+            addL(780, 200, 65, 0.05); addC(880, 250);
+            addP(860, 280, 80, 200); addH('saw', 970, 220, 55, 55);
             addP(1050, 280, 60, 20, 'crumbling', null, { touched: false, timer: 20, destroyed: false });
             addP(1160, 280, 140, 200);
-            cx = 1350; cy = 280;
-            break;
+            cx = 1350; cy = 280; break;
     }
 
-    // End Platform & Exit Door
+    // 🌟 END PLATFORM & NEW EXIT SPIKES
     addP(cx, cy, 150, 200);
-    exitDoor = { x: cx + 55, y: cy - 65, w: 45, h: 65 };
+    // Spikes protecting the final door
+    addH('spike', cx + 15, cy - 20, 40, 20); 
+    exitDoor = { x: cx + 75, y: cy - 65, w: 45, h: 65 };
 }
 
 function respawnPlayer() {
@@ -525,7 +435,6 @@ function update() {
 
     player.grounded = false;
     
-    // Platforms & Collisions
     platforms.forEach(p => {
         if (p.type === 'moving' && p.move) {
             if (p.move.axis === 'y') {
@@ -561,20 +470,20 @@ function update() {
         }
     });
 
-    // Multi-hazard collisions
     hazards.forEach(h => {
-        h.rotation = (h.rotation || 0) + 0.1; // Rotate saws
+        h.rotation = (h.rotation || 0) + 0.1;
         if (player.x + player.width - 6 > h.x && player.x + 6 < h.x + h.w &&
             player.y + player.height > h.y + 4 && player.y + 4 < h.y + h.h) {
             handleDeath();
         }
     });
 
+    // 🌟 PERFECT CHECKPOINT POSITIONING FIX
     checkpointsList.forEach(cp => {
         if (!cp.reached && player.x + player.width > cp.x && player.x < cp.x + cp.w &&
             player.y + player.height > cp.y && player.y < cp.y + cp.h) {
             cp.reached = true;
-            checkpoint = { x: cp.x, y: cp.y - 10 };
+            checkpoint = { x: cp.x + 4, y: cp.y + cp.h - player.height - 2 }; // Anchors spawn safely to the floor
             spawnParticles(cp.x, cp.y, 12, '#fde047', 'spark');
         }
     });
@@ -630,11 +539,8 @@ function handleDeath() {
     respawnPlayer();
 }
 
-// 🎯 ANIMATED ADVANCED BACKGROUND GRAPHICS
 function drawAdvancedBackground() {
     bgTimer += 0.03;
-
-    // Sky Base Gradient
     let skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
     skyGrad.addColorStop(0, currentTheme.sky[0]);
     skyGrad.addColorStop(1, currentTheme.sky[1]);
@@ -642,134 +548,154 @@ function drawAdvancedBackground() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
-    
     if (currentTheme.id === 'neon') {
-        // Neon Synthwave Horizon Grid & Glowing Sun
         let sunGrad = ctx.createRadialGradient(canvas.width / 2, 220, 10, canvas.width / 2, 220, 120);
-        sunGrad.addColorStop(0, '#fde047');
-        sunGrad.addColorStop(1, 'rgba(236, 72, 153, 0)');
+        sunGrad.addColorStop(0, '#fde047'); sunGrad.addColorStop(1, 'rgba(236, 72, 153, 0)');
         ctx.fillStyle = sunGrad;
         ctx.beginPath(); ctx.arc(canvas.width / 2, 220, 120, 0, Math.PI * 2); ctx.fill();
-
-        ctx.strokeStyle = 'rgba(236, 72, 153, 0.25)';
-        ctx.lineWidth = 1.5;
-        let gridOffset = (bgTimer * 40) % 30;
-        for (let y = 220; y < canvas.height; y += 15) {
-            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
-        }
-        for (let x = -200; x < canvas.width + 200; x += 40) {
-            ctx.beginPath(); ctx.moveTo(canvas.width / 2 + (x - canvas.width / 2) * 0.1, 220); 
-            ctx.lineTo(x, canvas.height); ctx.stroke();
-        }
-
+        ctx.strokeStyle = 'rgba(236, 72, 153, 0.25)'; ctx.lineWidth = 1.5;
+        for (let y = 220; y < canvas.height; y += 15) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke(); }
+        for (let x = -200; x < canvas.width + 200; x += 40) { ctx.beginPath(); ctx.moveTo(canvas.width / 2 + (x - canvas.width / 2) * 0.1, 220); ctx.lineTo(x, canvas.height); ctx.stroke(); }
     } else if (currentTheme.id === 'lava') {
-        // Rising Embers
         bgParticles.forEach(p => {
-            p.y -= p.speedY;
-            if (p.y < 0) p.y = canvas.height;
-            ctx.fillStyle = `rgba(249, 115, 22, ${p.alpha})`;
-            ctx.fillRect(p.x - cameraX * 0.2, p.y, p.size, p.size);
+            p.y -= p.speedY; if (p.y < 0) p.y = canvas.height;
+            ctx.fillStyle = `rgba(249, 115, 22, ${p.alpha})`; ctx.fillRect(p.x - cameraX * 0.2, p.y, p.size, p.size);
         });
-
     } else if (currentTheme.id === 'space') {
-        // Starfield
         bgParticles.forEach((p, idx) => {
-            let px = (p.x - cameraX * 0.1) % canvas.width;
-            if (px < 0) px += canvas.width;
+            let px = (p.x - cameraX * 0.1) % canvas.width; if (px < 0) px += canvas.width;
             let tw = Math.sin(bgTimer * 3 + idx) * 0.3 + 0.7;
-            ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha * tw})`;
-            ctx.fillRect(px, p.y, p.size, p.size);
+            ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha * tw})`; ctx.fillRect(px, p.y, p.size, p.size);
         });
-
     } else if (currentTheme.id === 'cyber') {
-        // Matrix Streaming Digital Grid
         ctx.fillStyle = 'rgba(52, 211, 153, 0.15)';
         bgParticles.forEach(p => {
-            p.y += p.speedY * 1.5;
-            if (p.y > canvas.height) p.y = 0;
-            let px = (p.x - cameraX * 0.2) % canvas.width;
-            if (px < 0) px += canvas.width;
+            p.y += p.speedY * 1.5; if (p.y > canvas.height) p.y = 0;
+            let px = (p.x - cameraX * 0.2) % canvas.width; if (px < 0) px += canvas.width;
             ctx.fillRect(px, p.y, p.size * 2, p.size * 6);
         });
-
     } else if (currentTheme.id === 'geo') {
-        // Rotating Geometric Shards
-        ctx.strokeStyle = 'rgba(251, 191, 36, 0.15)';
-        ctx.lineWidth = 2;
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.15)'; ctx.lineWidth = 2;
         for (let i = 0; i < 8; i++) {
             let sx = ((i * 180) - cameraX * 0.2) % (canvas.width + 200);
             let sy = 100 + Math.sin(bgTimer + i) * 30;
-            ctx.save();
-            ctx.translate(sx, sy);
-            ctx.rotate(bgTimer * 0.5 + i);
-            ctx.strokeRect(-20, -20, 40, 40);
-            ctx.restore();
+            ctx.save(); ctx.translate(sx, sy); ctx.rotate(bgTimer * 0.5 + i); ctx.strokeRect(-20, -20, 40, 40); ctx.restore();
         }
     }
-
     ctx.restore();
 }
 
-// 🎯 DRAW HAZARDS (Spikes, Saws, Lava)
 function drawHazard(h) {
     if (h.type === 'spike') {
-        ctx.fillStyle = '#94a3b8';
-        ctx.strokeStyle = '#334155';
-        ctx.lineWidth = 2;
-        let count = Math.floor(h.w / 15);
-        let spikeW = h.w / count;
+        ctx.fillStyle = '#94a3b8'; ctx.strokeStyle = '#334155'; ctx.lineWidth = 2;
+        let count = Math.floor(h.w / 15); let spikeW = h.w / count;
         for (let i = 0; i < count; i++) {
-            ctx.beginPath();
-            ctx.moveTo(h.x + (i * spikeW), h.y + h.h);
+            ctx.beginPath(); ctx.moveTo(h.x + (i * spikeW), h.y + h.h);
             ctx.lineTo(h.x + (i * spikeW) + (spikeW / 2), h.y);
             ctx.lineTo(h.x + ((i + 1) * spikeW), h.y + h.h);
-            ctx.closePath();
-            ctx.fill(); ctx.stroke();
+            ctx.closePath(); ctx.fill(); ctx.stroke();
         }
     } else if (h.type === 'saw') {
-        ctx.save();
-        ctx.translate(h.x + h.w / 2, h.y + h.h / 2);
-        ctx.rotate(h.rotation);
-        ctx.fillStyle = '#cbd5e1';
-        ctx.strokeStyle = '#0f172a';
-        ctx.lineWidth = 2;
+        ctx.save(); ctx.translate(h.x + h.w / 2, h.y + h.h / 2); ctx.rotate(h.rotation);
+        ctx.fillStyle = '#cbd5e1'; ctx.strokeStyle = '#0f172a'; ctx.lineWidth = 2;
         ctx.beginPath();
         for (let i = 0; i < 8; i++) {
-            let a = (i * Math.PI / 4);
-            ctx.lineTo(Math.cos(a) * (h.w / 2), Math.sin(a) * (h.h / 2));
-            let a2 = a + Math.PI / 8;
-            ctx.lineTo(Math.cos(a2) * (h.w / 4), Math.sin(a2) * (h.h / 4));
+            let a = (i * Math.PI / 4); ctx.lineTo(Math.cos(a) * (h.w / 2), Math.sin(a) * (h.h / 2));
+            let a2 = a + Math.PI / 8; ctx.lineTo(Math.cos(a2) * (h.w / 4), Math.sin(a2) * (h.h / 4));
         }
-        ctx.closePath();
-        ctx.fill(); ctx.stroke();
-        ctx.fillStyle = '#ef4444';
-        ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#ef4444'; ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
     } else if (h.type === 'lava') {
-        ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
-        ctx.fillRect(h.x - 2, h.y - 2, h.w + 4, h.h + 4);
-        ctx.fillStyle = '#dc2626';
-        ctx.fillRect(h.x, h.y, h.w, h.h);
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.fillRect(h.x, h.y + h.h - 5, h.w, 5);
-        ctx.fillRect(h.x + h.w - 5, h.y, 5, h.h);
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.4)'; ctx.fillRect(h.x - 2, h.y - 2, h.w + 4, h.h + 4);
+        ctx.fillStyle = '#dc2626'; ctx.fillRect(h.x, h.y, h.w, h.h);
+        ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(h.x, h.y + h.h - 5, h.w, 5); ctx.fillRect(h.x + h.w - 5, h.y, 5, h.h);
     }
 }
 
+// 🌟 NEW DETAILED CHARACTER DRAWING LOGIC
 function drawTCharacter(x, y) {
     ctx.save();
     ctx.translate(x + 14, y + 38);
     ctx.scale(player.facingRight ? player.scaleX : -player.scaleX, player.scaleY);
+    
+    // Base Body
     ctx.fillStyle = equippedSkin.color;
-    ctx.fillRect(-8, -38, 16, 12);
-    ctx.fillRect(-14, -26, 28, 9);
-    ctx.fillRect(-7, -17, 14, 17);
+    ctx.fillRect(-8, -38, 16, 12); // Head
+    ctx.fillRect(-14, -26, 28, 9); // Arms/Chest
+    ctx.fillRect(-7, -17, 14, 17); // Legs
+
+    // Shading
     ctx.fillStyle = equippedSkin.dark;
     ctx.fillRect(4, -38, 4, 12);
     ctx.fillRect(9, -26, 5, 9);
+    
+    // Eyes
     ctx.fillStyle = '#000000';
     ctx.fillRect(-4, -34, 3, 3);
     ctx.fillRect(2, -34, 3, 3);
+
+    // 🌟 ACCESSORIES BASED ON SELECTION
+    const type = equippedSkin.type;
+    
+    if (type === 'king') {
+        ctx.fillStyle = '#fbbf24'; ctx.fillRect(-9, -42, 18, 4); // Crown Base
+        ctx.fillRect(-9, -45, 4, 3); ctx.fillRect(-2, -45, 4, 3); ctx.fillRect(5, -45, 4, 3); // Spikes
+        ctx.fillStyle = '#ef4444'; ctx.fillRect(-1, -44, 2, 2); // Gem
+    } 
+    else if (type === 'knight') {
+        ctx.fillStyle = '#94a3b8'; ctx.fillRect(-16, -38, 4, 18); // Sword Blade
+        ctx.fillStyle = '#78350f'; ctx.fillRect(-18, -20, 8, 3); // Hilt
+        ctx.fillRect(-15, -17, 2, 6); // Handle
+    }
+    else if (type === 'wizard') {
+        ctx.fillStyle = '#1e3a8a'; ctx.beginPath(); ctx.moveTo(-12, -38); ctx.lineTo(12, -38); ctx.lineTo(0, -50); ctx.fill(); // Hat
+        ctx.fillStyle = '#facc15'; ctx.fillRect(-2, -44, 4, 4); // Star on hat
+        ctx.fillStyle = '#78350f'; ctx.fillRect(-16, -30, 4, 30); // Staff
+        ctx.fillStyle = '#38bdf8'; ctx.beginPath(); ctx.arc(-14, -33, 4, 0, Math.PI * 2); ctx.fill(); // Orb
+    }
+    else if (type === 'ninja') {
+        ctx.fillStyle = '#000000'; ctx.fillRect(-9, -36, 18, 6); // Mask
+        ctx.fillRect(9, -35, 6, 4); // Tie tails
+        ctx.fillStyle = equippedSkin.color; ctx.fillRect(-4, -34, 8, 3); // Eye slot
+        ctx.fillStyle = '#000000'; ctx.fillRect(-3, -34, 2, 2); ctx.fillRect(1, -34, 2, 2); // Eyes over mask
+    }
+    else if (type === 'archer') {
+        ctx.fillStyle = '#78350f'; ctx.beginPath(); ctx.moveTo(-6, -26); ctx.lineTo(6, -17); ctx.lineWidth = 3; ctx.stroke(); // Strap
+        ctx.fillStyle = '#e5e5e5'; ctx.fillRect(10, -32, 2, 10); ctx.fillRect(13, -30, 2, 8); // Arrows in back
+    }
+    else if (type === 'chef') {
+        ctx.fillStyle = '#ffffff'; ctx.fillRect(-10, -48, 20, 10); // Tall Hat
+        ctx.fillRect(-12, -52, 24, 6); // Hat Top puffy
+        ctx.fillStyle = '#ef4444'; ctx.fillRect(-8, -26, 16, 4); ctx.fillRect(-2, -22, 4, 6); // Red Scarf
+        ctx.fillStyle = '#64748b'; ctx.fillRect(-16, -20, 6, 8); // Spatula Head
+        ctx.fillStyle = '#78350f'; ctx.fillRect(-14, -12, 2, 10); // Spatula Handle
+    }
+    else if (type === 'pink') {
+        ctx.fillStyle = '#e11d48'; ctx.fillRect(2, -44, 8, 8); ctx.fillRect(-8, -44, 8, 8); // Bow loops
+        ctx.fillStyle = '#f43f5e'; ctx.fillRect(-3, -41, 6, 6); // Bow center
+    }
+    else if (type === 'gent') {
+        ctx.fillStyle = '#0f172a'; ctx.fillRect(-11, -38, 22, 3); // Hat Brim
+        ctx.fillRect(-8, -48, 16, 10); // Hat Top
+        ctx.fillStyle = '#ef4444'; ctx.fillRect(-8, -40, 16, 2); // Hat Ribbon
+        ctx.fillStyle = '#0f172a'; ctx.fillRect(-2, -24, 4, 3); ctx.fillRect(-4, -24, 8, 1); // Bowtie
+        ctx.fillStyle = '#78350f'; ctx.fillRect(-16, -20, 4, 20); // Cane
+        ctx.fillRect(-18, -20, 6, 3); // Cane Top
+    }
+    else if (type === 'rapper') {
+        ctx.fillStyle = '#000000'; ctx.fillRect(-9, -35, 18, 5); // Sunglasses
+        ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.moveTo(-7, -26); ctx.lineTo(0, -18); ctx.lineTo(7, -26); ctx.lineWidth = 2; ctx.stroke(); // Chain
+        ctx.fillRect(-2, -19, 4, 4); // Medallion
+    }
+    else if (type === 'builder') {
+        ctx.fillStyle = '#facc15'; ctx.fillRect(-10, -42, 20, 6); // Hard Hat
+        ctx.fillRect(-12, -38, 24, 2); // Brim
+        ctx.fillStyle = '#fbbf24'; ctx.fillRect(-9, -17, 18, 4); // Tool belt
+        ctx.fillStyle = '#94a3b8'; ctx.fillRect(10, -26, 4, 6); // Hammer head
+        ctx.fillStyle = '#78350f'; ctx.fillRect(11, -20, 2, 10); // Hammer handle
+    }
+
     ctx.restore();
 }
 
@@ -800,15 +726,12 @@ function draw() {
         }
         ctx.restore();
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-        ctx.fillRect(p.x, p.y, p.w, 3);
-        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-        ctx.fillRect(p.x + p.w - 3, p.y, 3, p.h);
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)'; ctx.fillRect(p.x, p.y, p.w, 3);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.2)'; ctx.fillRect(p.x + p.w - 3, p.y, 3, p.h);
     });
 
     checkpointsList.forEach(cp => {
-        ctx.fillStyle = '#64748b';
-        ctx.fillRect(cp.x, cp.y, 4, cp.h);
+        ctx.fillStyle = '#64748b'; ctx.fillRect(cp.x, cp.y, 4, cp.h);
         ctx.fillStyle = cp.reached ? '#22c55e' : '#cbd5e1';
         ctx.beginPath(); ctx.moveTo(cp.x + 4, cp.y); ctx.lineTo(cp.x + 20, cp.y + 5); ctx.lineTo(cp.x + 4, cp.y + 12); ctx.fill();
     });
@@ -816,8 +739,7 @@ function draw() {
     coinsList.forEach(c => {
         if (!c.collected) {
             let pulse = Math.sin(bgTimer * 5) * 1.5;
-            ctx.fillStyle = '#facc15';
-            ctx.beginPath(); ctx.arc(c.x, c.y, 7 + pulse, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#facc15'; ctx.beginPath(); ctx.arc(c.x, c.y, 7 + pulse, 0, Math.PI * 2); ctx.fill();
             ctx.fillStyle = '#ffffff'; ctx.fillRect(c.x - 2, c.y - 2, 3, 3);
         }
     });
@@ -825,8 +747,7 @@ function draw() {
     hazards.forEach(h => drawHazard(h));
 
     lasers.forEach(l => {
-        let lx = l.cx + Math.cos(l.angle) * l.length;
-        let ly = l.cy + Math.sin(l.angle) * l.length;
+        let lx = l.cx + Math.cos(l.angle) * l.length; let ly = l.cy + Math.sin(l.angle) * l.length;
         ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 4;
         ctx.beginPath(); ctx.moveTo(l.cx, l.cy); ctx.lineTo(lx, ly); ctx.stroke();
     });
