@@ -3,63 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ObbyX: Stage Rush</title>
-    <!-- Notice the ?v=2 added here to force your phone to update the CSS -->
-    <link rel="stylesheet" href="style.css?v=2">
+    <title>Geometric Obby</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
+
+    <!-- Top UI Bar -->
+    <div id="ui-bar">
+        <div class="ui-group">
+            <span id="level-title">Stage 1 / 15</span>
+            <span id="theme-name" class="sub-text">Theme: Gray Blocks</span>
+        </div>
+        <div class="ui-group center-text">
+            <span id="timer-display">⏱️ 00:00</span>
+        </div>
+        <div class="ui-group right-text">
+            <span id="coin-counter">🪙 0</span>
+            <span id="death-counter">☠️ 0</span>
+        </div>
+    </div>
+
+    <!-- Game Container -->
     <div id="game-container">
-        <div id="ui-overlay">
-            <div class="stats-bar">
-                <span id="level-title">Stage 1 / 20</span>
-                <span id="coin-counter">🪙 0</span>
-                <span id="death-counter">☠️ 0</span>
-                <span id="timer-display">⏱️ 00:00</span>
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Start Modal -->
+        <div id="start-modal" class="modal">
+            <div class="modal-content">
+                <h1>GEOMETRIC OBBY</h1>
+                <p>Use W/A/S/D or Arrow Keys to move.</p>
+                <p>Press 'S' for Shop | 'L' for Levels | 'ESC' to Pause</p>
+                <button id="start-game-btn" class="action-btn">PLAY NOW</button>
             </div>
-            <div id="theme-name">Theme: Grassland</div>
-            <p class="controls">A/D: Move | Space/W: Jump | R: Respawn | S: Shop | L: Level Select | M: Mute | ESC: Pause</p>
         </div>
 
-        <!-- Start Screen Modal -->
-        <div id="start-modal" class="modal">
-            <h1 class="main-logo">OBBYX</h1>
-            <h3 class="sub-logo">STAGE RUSH</h3>
-            <button class="menu-btn start-btn" id="start-game-btn">PLAY GAME</button>
+        <!-- Pause Modal -->
+        <div id="pause-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>PAUSED</h2>
+                <button id="resume-btn" class="action-btn">RESUME</button>
+            </div>
         </div>
 
         <!-- Shop Modal -->
         <div id="shop-modal" class="modal hidden">
-            <h2>Skins Shop</h2>
-            <div id="shop-items"></div>
-            <button class="menu-btn" id="close-shop-btn">Back to Game</button>
-        </div>
-
-        <!-- Level Select Modal -->
-        <div id="level-modal" class="modal hidden">
-            <h2>Select Stage</h2>
-            <div id="level-grid"></div>
-            <button class="menu-btn" id="close-level-btn">Back to Game</button>
-        </div>
-
-        <!-- Pause Overlay -->
-        <div id="pause-modal" class="modal hidden">
-            <h2>Game Paused</h2>
-            <button class="menu-btn" id="resume-btn">Resume</button>
-        </div>
-
-        <canvas id="gameCanvas" width="960" height="540"></canvas>
-
-        <!-- 📱 Mobile Touch Controls -->
-        <div id="mobile-controls">
-            <div class="dpad">
-                <button id="btn-left">◀</button>
-                <button id="btn-right">▶</button>
+            <div class="modal-content shop-content">
+                <h2>SKIN SHOP</h2>
+                <div id="shop-items"></div>
+                <button id="close-shop-btn" class="close-btn">CLOSE</button>
             </div>
-            <button id="btn-jump">JUMP</button>
+        </div>
+
+        <!-- Level Modal -->
+        <div id="level-modal" class="modal hidden">
+            <div class="modal-content">
+                <h2>STAGE SELECT</h2>
+                <div id="level-grid"></div>
+                <button id="close-level-btn" class="close-btn">CLOSE</button>
+            </div>
         </div>
     </div>
-    
-    <!-- Notice the ?v=2 added here to force your phone to update the JS -->
-    <script src="game.js?v=2"></script>
+
+    <!-- Mobile Controls (Only visible on small screens) -->
+    <div id="mobile-controls">
+        <div class="control-cluster left-cluster">
+            <button id="btn-left" class="mobile-btn">◀</button>
+            <button id="btn-right" class="mobile-btn">▶</button>
+        </div>
+        <div class="control-cluster right-cluster">
+            <button id="btn-jump" class="mobile-btn">▲</button>
+        </div>
+    </div>
+
+    <!-- Load Game Script with Cache Buster -->
+    <script src="game.js?v=300"></script>
 </body>
 </html>

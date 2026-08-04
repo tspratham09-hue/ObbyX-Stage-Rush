@@ -1,7 +1,6 @@
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-// 🎯 FIX: Lock internal resolution so camera calculations work properly
 canvas.width = 960;
 canvas.height = 540;
 
@@ -11,30 +10,23 @@ const coinCounterUI = document.getElementById('coin-counter');
 const deathCounterUI = document.getElementById('death-counter');
 const timerDisplayUI = document.getElementById('timer-display');
 const themeNameUI = document.getElementById('theme-name');
-
 const startModal = document.getElementById('start-modal');
 const startGameBtn = document.getElementById('start-game-btn');
-
 const shopModal = document.getElementById('shop-modal');
 const shopItemsContainer = document.getElementById('shop-items');
 const closeShopBtn = document.getElementById('close-shop-btn');
-
 const levelModal = document.getElementById('level-modal');
 const levelGridContainer = document.getElementById('level-grid');
 const closeLevelBtn = document.getElementById('close-level-btn');
-
 const pauseModal = document.getElementById('pause-modal');
 const resumeBtn = document.getElementById('resume-btn');
 
-// Web Audio Synthesizer
 let audioCtx = null;
 let isMuted = false;
 
 function initAudio() {
     if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') {
-        audioCtx.resume();
-    }
+    if (audioCtx.state === 'suspended') audioCtx.resume();
 }
 
 function playSFX(type) {
@@ -51,18 +43,6 @@ function playSFX(type) {
         gain.gain.setValueAtTime(0.2, now);
         gain.gain.linearRampToValueAtTime(0.01, now + 0.12);
         osc.start(now); osc.stop(now + 0.12);
-    } else if (type === 'coin') {
-        osc.frequency.setValueAtTime(800, now);
-        osc.frequency.setValueAtTime(1200, now + 0.08);
-        gain.gain.setValueAtTime(0.2, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
-        osc.start(now); osc.stop(now + 0.2);
-    } else if (type === 'bounce') {
-        osc.frequency.setValueAtTime(120, now);
-        osc.frequency.exponentialRampToValueAtTime(380, now + 0.2);
-        gain.gain.setValueAtTime(0.3, now);
-        gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
-        osc.start(now); osc.stop(now + 0.2);
     } else if (type === 'death') {
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(280, now);
@@ -70,16 +50,15 @@ function playSFX(type) {
         gain.gain.setValueAtTime(0.3, now);
         gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
         osc.start(now); osc.stop(now + 0.25);
-    } else if (type === 'checkpoint') {
-        osc.frequency.setValueAtTime(523, now);
-        osc.frequency.setValueAtTime(659, now + 0.08);
+    } else if (type === 'coin') {
+        osc.frequency.setValueAtTime(800, now);
+        osc.frequency.setValueAtTime(1200, now + 0.08);
         gain.gain.setValueAtTime(0.2, now);
         gain.gain.linearRampToValueAtTime(0.01, now + 0.2);
         osc.start(now); osc.stop(now + 0.2);
     }
 }
 
-// LocalStorage Persistence
 function loadProgress() {
     coins = parseInt(localStorage.getItem('obby_coins') || '0');
     maxUnlockedLevel = parseInt(localStorage.getItem('obby_maxLevel') || '1');
@@ -95,11 +74,11 @@ function saveProgress() {
     localStorage.setItem('obby_equippedSkin', equippedSkin.id);
 }
 
-// Game State Flags
+// 🎯 REDUCED STAGES
 let isStartMenu = true;
 let currentLevel = 1;
 let maxUnlockedLevel = 1;
-const TOTAL_LEVELS = 20;
+const TOTAL_LEVELS = 15; 
 let deaths = 0;
 let coins = 0;
 let startTime = Date.now();
@@ -107,11 +86,8 @@ let isGameWon = false;
 let isPaused = false;
 let screenShake = 0;
 let bgTimer = 0;
-
-// 🎥 SCROLLING CAMERA VARIABLE
 let cameraX = 0;
 
-// Skins
 const SKINS = [
     { id: 'yellow', name: 'Yellow', cost: 0, color: '#fde047', dark: '#ca8a04' },
     { id: 'red', name: 'Ruby', cost: 10, color: '#ef4444', dark: '#991b1b' },
@@ -122,7 +98,6 @@ const SKINS = [
 let unlockedSkins = ['yellow'];
 let equippedSkin = SKINS[0];
 
-// Player Properties
 const player = {
     x: 50, y: 350, width: 28, height: 38,
     vx: 0, vy: 0, speed: 4.8, jumpForce: -11,
@@ -135,7 +110,6 @@ const GRAVITY = 0.52;
 const FRICTION = 0.82;
 let keys = {};
 
-// Stage Elements & Particles
 let platforms = [];
 let hazards = [];
 let coinsList = [];
@@ -144,12 +118,13 @@ let lasers = [];
 let particles = [];
 let exitDoor = { x: 880, y: 300, w: 45, h: 65 };
 
+// 🎯 DIFFERENT BACKGROUND COLORS PER LEVEL
 const THEMES = [
-    { name: "Grassland", sky: ["#0284c7", "#bae6fd"], platform: "#22c55e", base: "#15803d" },
-    { name: "Desert Sunset", sky: ["#7c2d12", "#fdba74"], platform: "#f59e0b", base: "#b45309" },
-    { name: "Frozen Ice", sky: ["#0f172a", "#38bdf8"], platform: "#06b6d4", base: "#0e7490" },
-    { name: "Lava Core", sky: ["#450a0a", "#f87171"], platform: "#dc2626", base: "#7f1d1d" },
-    { name: "Cyber Neon", sky: ["#311042", "#c084fc"], platform: "#a855f7", base: "#581c87" }
+    { name: "Gray Blocks", sky: ["#d1d5db", "#f3f4f6"], platform: "#64748b", base: "#475569" }, // Matches images exactly
+    { name: "Lava Cave", sky: ["#450a0a", "#7f1d1d"], platform: "#3f3f46", base: "#27272a" },
+    { name: "Sky High", sky: ["#0284c7", "#bae6fd"], platform: "#cbd5e1", base: "#94a3b8" },
+    { name: "Neon District", sky: ["#311042", "#c084fc"], platform: "#2dd4bf", base: "#0f766e" },
+    { name: "Desert Ruins", sky: ["#7c2d12", "#fdba74"], platform: "#d97706", base: "#b45309" }
 ];
 let currentTheme = THEMES[0];
 
@@ -168,36 +143,20 @@ function spawnParticles(x, y, count, color, type = 'dust') {
 
 function loadLevel(levelNum) {
     platforms = []; hazards = []; coinsList = []; checkpointsList = []; lasers = [];
-    
     checkpoint = { x: 50, y: 350 };
     respawnPlayer();
-    cameraX = 0; // Reset camera on load
+    cameraX = 0;
 
     currentTheme = THEMES[(levelNum - 1) % THEMES.length];
     levelTitleUI.innerText = `Stage ${levelNum} / ${TOTAL_LEVELS}`;
     themeNameUI.innerText = `Theme: ${currentTheme.name}`;
 
-    let pWidth, gap, totalObstacles, allowCrumbling, allowConveyor, allowLasers, moveSpeedMult;
-
-    if (levelNum <= 5) {
-        pWidth = 120 - (levelNum * 4);
-        gap = 60 + (levelNum * 4);
-        totalObstacles = 5 + Math.floor(levelNum * 0.3);
-        allowCrumbling = false; allowConveyor = false; allowLasers = false;
-        moveSpeedMult = 0.8;
-    } else if (levelNum <= 12) {
-        pWidth = 95 - ((levelNum - 5) * 3);
-        gap = 85 + ((levelNum - 5) * 4);
-        totalObstacles = 7 + Math.floor((levelNum - 5) * 0.5);
-        allowCrumbling = true; allowConveyor = true; allowLasers = levelNum >= 9;
-        moveSpeedMult = 1.3;
-    } else {
-        pWidth = 70 - Math.min((levelNum - 12) * 2, 20);
-        gap = 110 + Math.min((levelNum - 12) * 3, 25);
-        totalObstacles = 9 + Math.floor((levelNum - 12) * 0.5);
-        allowCrumbling = true; allowConveyor = true; allowLasers = true;
-        moveSpeedMult = 2.0;
-    }
+    // 🎯 DIFFICULTY GREATLY REDUCED
+    // Wider platforms, closer jumps, fewer obstacles
+    let pWidth = 150 - (levelNum * 3);  // Keeps platforms large and easy to land on
+    let gap = 50 + (levelNum * 2);      // Jumps are much shorter
+    let totalObstacles = 4 + Math.floor(levelNum * 0.4); 
+    let moveSpeedMult = 0.5 + (levelNum * 0.05); // Moving platforms move slowly
 
     platforms.push({ x: 20, y: 400, w: 120, h: 140, type: 'normal' });
 
@@ -205,9 +164,9 @@ function loadLevel(levelNum) {
     let currentY = 380;
 
     for (let i = 0; i < totalObstacles; i++) {
-        if (i % 3 === 1) currentY -= (levelNum <= 5 ? 25 : 40);
-        else if (i % 3 === 2) currentY += (levelNum <= 5 ? 20 : 35);
-        currentY = Math.max(180, Math.min(420, currentY));
+        if (i % 3 === 1) currentY -= 20;
+        else if (i % 3 === 2) currentY += 20;
+        currentY = Math.max(220, Math.min(420, currentY));
 
         currentX += gap;
 
@@ -215,15 +174,14 @@ function loadLevel(levelNum) {
         let moveData = null;
         let vanData = null;
 
-        if (i % 4 === 1 && levelNum >= 3) {
+        // 🎯 DIFFERENT MECHANICS BASED ON LEVEL
+        if (levelNum >= 5 && i % 4 === 1) {
             type = 'moving';
-            moveData = { dir: 1, range: 40 + levelNum * 2, startX: currentX, speed: 1.0 * moveSpeedMult };
-        } else if (i % 4 === 2 && allowCrumbling) {
+            moveData = { dir: 1, range: 40 + levelNum, startX: currentX, speed: 0.8 * moveSpeedMult };
+        } else if (levelNum >= 7 && i % 4 === 2) {
             type = 'crumbling';
-            vanData = { touched: false, timer: levelNum > 12 ? 20 : 35, destroyed: false };
-        } else if (i % 4 === 3 && allowConveyor) {
-            type = 'conveyor';
-        } else if (i % 5 === 0 && levelNum >= 2) {
+            vanData = { touched: false, timer: 50, destroyed: false }; // Timer is longer so it doesn't fall too fast
+        } else if (levelNum >= 10 && i % 4 === 3) {
             type = 'bounce';
         }
 
@@ -236,27 +194,23 @@ function loadLevel(levelNum) {
             checkpointsList.push({ x: currentX + pWidth / 2 - 10, y: currentY - 30, w: 20, h: 30, reached: false });
         }
 
-        if ((levelNum >= 3 && i % 2 === 1 && type !== 'crumbling') || (levelNum > 12 && i % 2 === 0)) {
-            let spikeW = levelNum <= 5 ? pWidth / 3 : pWidth / 2;
-            hazards.push({ x: currentX + (pWidth - spikeW) / 2, y: currentY - 14, w: spikeW, h: 14 });
+        // 🎯 LAVA BLOCKS (Introduced steadily)
+        if (levelNum >= 4 && i % 2 === 1 && type !== 'crumbling') {
+            let lavaSize = 35;
+            hazards.push({ x: currentX + (pWidth / 2) - (lavaSize / 2), y: currentY - 40, w: lavaSize, h: lavaSize });
         }
 
-        if (Math.random() > 0.35) {
-            coinsList.push({ x: currentX + pWidth / 2, y: currentY - 35, collected: false });
+        if (Math.random() > 0.4) {
+            coinsList.push({ x: currentX + pWidth / 2, y: currentY - 70, collected: false });
         }
 
-        if (allowLasers && i % 3 === 0) {
-            lasers.push({
-                cx: currentX + pWidth / 2,
-                cy: currentY - 65,
-                length: levelNum > 12 ? 75 : 55,
-                angle: 0,
-                speed: (0.02 + levelNum * 0.002) * (levelNum > 12 ? 1.4 : 1.0)
-            });
+        // 🎯 LASERS ONLY ON FINAL LEVELS
+        if (levelNum >= 13 && i % 3 === 0) {
+            lasers.push({ cx: currentX + pWidth / 2, cy: currentY - 80, length: 50, angle: 0, speed: 0.015 });
         }
     }
 
-    const lastX = currentX + 140;
+    const lastX = currentX + 150;
     platforms.push({ x: lastX, y: currentY, w: 140, h: 200, type: 'normal' });
     exitDoor = { x: lastX + 50, y: currentY - 65, w: 45, h: 65 };
 }
@@ -278,29 +232,18 @@ function triggerJump() {
     }
 }
 
-startGameBtn.onclick = () => {
-    initAudio();
-    isStartMenu = false;
-    startModal.classList.add('hidden');
-    startTime = Date.now();
-};
-
+startGameBtn.onclick = () => { initAudio(); isStartMenu = false; startModal.classList.add('hidden'); startTime = Date.now(); };
 window.addEventListener('keydown', (e) => {
     initAudio();
     const k = e.key.toLowerCase();
     keys[k] = true;
-
-    if (e.code === 'Space' || k === 'w' || e.code === 'ArrowUp') {
-        triggerJump(); 
-    }
-    
+    if (e.code === 'Space' || k === 'w' || e.code === 'ArrowUp') triggerJump(); 
     if (k === 'r') respawnPlayer();
     if (k === 's') toggleModal(shopModal, renderShop);
     if (k === 'l') toggleModal(levelModal, renderLevelGrid);
     if (k === 'm') isMuted = !isMuted;
     if (e.key === 'Escape') togglePause();
 });
-
 window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
 
 function toggleModal(modal, renderFunc) {
@@ -332,27 +275,13 @@ function renderShop() {
     SKINS.forEach(skin => {
         const isUnlocked = unlockedSkins.includes(skin.id);
         const isEquipped = equippedSkin.id === skin.id;
-
         const card = document.createElement('div');
         card.className = `shop-card ${isEquipped ? 'selected' : ''}`;
-        card.innerHTML = `
-            <h4>${skin.name}</h4>
-            <div class="shop-preview" style="background: ${skin.color}"></div>
-            <p>${isUnlocked ? 'Owned' : '🪙 ' + skin.cost}</p>
-            <button ${isEquipped ? 'disabled' : ''}>${isEquipped ? 'Equipped' : isUnlocked ? 'Equip' : 'Buy'}</button>
-        `;
-
+        card.innerHTML = `<h4>${skin.name}</h4><div class="shop-preview" style="background: ${skin.color}"></div><p>${isUnlocked ? 'Owned' : '🪙 ' + skin.cost}</p><button ${isEquipped ? 'disabled' : ''}>${isEquipped ? 'Equipped' : isUnlocked ? 'Equip' : 'Buy'}</button>`;
         card.querySelector('button').onclick = () => {
-            if (isUnlocked) {
-                equippedSkin = skin;
-            } else if (coins >= skin.cost) {
-                coins -= skin.cost;
-                unlockedSkins.push(skin.id);
-                equippedSkin = skin;
-                coinCounterUI.innerText = `🪙 ${coins}`;
-            }
-            saveProgress();
-            renderShop();
+            if (isUnlocked) equippedSkin = skin;
+            else if (coins >= skin.cost) { coins -= skin.cost; unlockedSkins.push(skin.id); equippedSkin = skin; coinCounterUI.innerText = `🪙 ${coins}`; }
+            saveProgress(); renderShop();
         };
         shopItemsContainer.appendChild(card);
     });
@@ -366,17 +295,12 @@ function renderLevelGrid() {
         btn.className = `level-btn ${isUnlocked ? 'unlocked' : 'locked'}`;
         btn.innerText = i;
         if (isUnlocked) {
-            btn.onclick = () => {
-                currentLevel = i;
-                loadLevel(currentLevel);
-                toggleModal(levelModal);
-            };
+            btn.onclick = () => { currentLevel = i; loadLevel(currentLevel); toggleModal(levelModal); };
         }
         levelGridContainer.appendChild(btn);
     }
 }
 
-// Engine Loop Update
 function update() {
     if (isStartMenu || isGameWon || isPaused) return;
 
@@ -388,14 +312,9 @@ function update() {
     player.x += player.vx;
     player.y += player.vy;
 
-    // 🎥 SCROLLING CAMERA TRACKING LOGIC
     const maxScrollX = Math.max(0, (exitDoor.x + exitDoor.w + 60) - canvas.width);
     let targetCameraX = player.x - (canvas.width / 3);
-    
-    // Smooth interpolating camera movement
     cameraX += (targetCameraX - cameraX) * 0.1;
-    
-    // Clamp bounds so screen doesn't scroll before start or past finish
     if (cameraX < 0) cameraX = 0;
     if (cameraX > maxScrollX) cameraX = maxScrollX;
 
@@ -408,39 +327,31 @@ function update() {
             p.x += p.move.dir * p.move.speed;
             if (p.x > p.move.startX + p.move.range || p.x < p.move.startX - p.move.range) p.move.dir *= -1;
         }
-
         if (p.type === 'crumbling' && p.van && p.van.touched) {
             p.van.timer--;
             if (p.van.timer <= 0) p.van.destroyed = true;
         }
-
         if (p.type === 'crumbling' && p.van && p.van.destroyed) return;
 
         if (player.x + player.width > p.x && player.x < p.x + p.w) {
             if (player.y + player.height >= p.y && player.y + player.height <= p.y + 18 && player.vy >= 0) {
-                if (!player.grounded && player.vy > 2) {
-                    player.scaleX = 1.3; player.scaleY = 0.7;
-                }
+                if (!player.grounded && player.vy > 2) { player.scaleX = 1.3; player.scaleY = 0.7; }
                 player.y = p.y - player.height;
                 player.vy = 0;
                 player.grounded = true;
                 player.jumpsLeft = player.maxJumps;
 
                 if (p.type === 'moving' && p.move) player.x += p.move.dir * p.move.speed;
-                if (p.type === 'conveyor') player.x += 2.2;
-                if (p.type === 'bounce') {
-                    player.vy = -16.5;
-                    playSFX('bounce');
-                    spawnParticles(player.x + 14, player.y + 35, 10, '#22c55e', 'spark');
-                }
+                if (p.type === 'bounce') { player.vy = -16.5; spawnParticles(player.x + 14, player.y + 35, 10, '#facc15', 'spark'); }
                 if (p.type === 'crumbling' && p.van) p.van.touched = true;
             }
         }
     });
 
     hazards.forEach(h => {
-        if (player.x + player.width > h.x && player.x < h.x + h.w &&
-            player.y + player.height > h.y && player.y < h.y + h.h) {
+        // More forgiving hitbox for lava blocks (need to really touch it to die)
+        if (player.x + player.width - 5 > h.x && player.x + 5 < h.x + h.w &&
+            player.y + player.height > h.y + 5 && player.y + 5 < h.y + h.h) {
             handleDeath();
         }
     });
@@ -450,18 +361,14 @@ function update() {
             player.y + player.height > cp.y && player.y < cp.y + cp.h) {
             cp.reached = true;
             checkpoint = { x: cp.x, y: cp.y - 10 };
-            playSFX('checkpoint');
             spawnParticles(cp.x, cp.y, 12, '#fde047', 'spark');
         }
     });
 
     coinsList.forEach(c => {
         if (!c.collected && Math.hypot((player.x + 14) - c.x, (player.y + 19) - c.y) < 22) {
-            c.collected = true;
-            coins++;
-            saveProgress();
-            coinCounterUI.innerText = `🪙 ${coins}`;
-            playSFX('coin');
+            c.collected = true; coins++; saveProgress();
+            coinCounterUI.innerText = `🪙 ${coins}`; playSFX('coin');
             spawnParticles(c.x, c.y, 8, '#facc15', 'spark');
         }
     });
@@ -497,7 +404,6 @@ function update() {
     const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
     const s = String(elapsed % 60).padStart(2, '0');
     timerDisplayUI.innerText = `⏱️ ${m}:${s}`;
-
     if (screenShake > 0) screenShake--;
 }
 
@@ -510,6 +416,7 @@ function handleDeath() {
     respawnPlayer();
 }
 
+// 🎯 GEOMETRIC BACKGROUND FROM SCREENSHOTS
 function drawBackground() {
     bgTimer += 0.03;
 
@@ -519,216 +426,176 @@ function drawBackground() {
     ctx.fillStyle = skyGrad;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    ctx.fillStyle = 'rgba(255, 255, 255, 0.12)';
-    const offset = (cameraX * 0.2) % 400; // Smooth parallax background shift
-    ctx.beginPath();
-    ctx.moveTo(0 - offset, 540);
-    ctx.lineTo(120 - offset, 300); ctx.lineTo(320 - offset, 540);
-    ctx.lineTo(580 - offset, 220); ctx.lineTo(820 - offset, 540);
-    ctx.lineTo(1080 - offset, 260); ctx.lineTo(1300 - offset, 540);
-    ctx.fill();
+    ctx.save();
+    ctx.globalAlpha = 0.08; 
+    const offset = (cameraX * 0.15) % 120;
+    ctx.translate(-offset, 0);
+    
+    const size = 60;
+    for(let y = 0; y < canvas.height + size; y += size) {
+        for(let x = 0; x < canvas.width + 300; x += size) {
+            let isEven = ((x/size + y/size) % 2 === 0);
+            ctx.beginPath();
+            if (isEven) {
+                ctx.moveTo(x, y); ctx.lineTo(x + size, y + size); ctx.lineTo(x, y + size);
+                ctx.fillStyle = '#ffffff';
+            } else {
+                ctx.moveTo(x, y); ctx.lineTo(x + size, y); ctx.lineTo(x + size, y + size);
+                ctx.fillStyle = '#000000';
+            }
+            ctx.fill();
+        }
+    }
+    ctx.restore();
 }
 
-function drawSpikes(h) {
-    ctx.fillStyle = '#ef4444';
-    const spikeWidth = 10;
-    const count = Math.floor(h.w / spikeWidth);
-    for (let i = 0; i < count; i++) {
-        let sx = h.x + i * spikeWidth;
-        ctx.beginPath();
-        ctx.moveTo(sx, h.y + h.h);
-        ctx.lineTo(sx + spikeWidth / 2, h.y);
-        ctx.lineTo(sx + spikeWidth, h.y + h.h);
-        ctx.fill();
-    }
+// 🎯 LAVA BLOCKS FROM SCREENSHOTS
+function drawLavaBlock(h) {
+    // Outer translucent glow
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
+    ctx.fillRect(h.x - 2, h.y - 2, h.w + 4, h.h + 4);
+    
+    // Core lava block
+    ctx.fillStyle = '#dc2626';
+    ctx.fillRect(h.x, h.y, h.w, h.h);
+    
+    // Shadow depth
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.fillRect(h.x, h.y + h.h - 5, h.w, 5);
+    ctx.fillRect(h.x + h.w - 5, h.y, 5, h.h);
+    
+    // Cracked texture lines
+    ctx.strokeStyle = '#991b1b';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(h.x + 5, h.y + 5); ctx.lineTo(h.x + 15, h.y + 15);
+    ctx.moveTo(h.x + h.w - 10, h.y + 5); ctx.lineTo(h.x + h.w - 5, h.y + 10);
+    ctx.stroke();
 }
 
 function drawTCharacter(x, y) {
     ctx.save();
     ctx.translate(x + 14, y + 38);
     ctx.scale(player.facingRight ? player.scaleX : -player.scaleX, player.scaleY);
-
     ctx.fillStyle = equippedSkin.color;
     ctx.fillRect(-8, -38, 16, 12);
     ctx.fillRect(-14, -26, 28, 9);
     ctx.fillRect(-7, -17, 14, 17);
-
     ctx.fillStyle = equippedSkin.dark;
     ctx.fillRect(4, -38, 4, 12);
     ctx.fillRect(9, -26, 5, 9);
-
     ctx.fillStyle = '#000000';
     ctx.fillRect(-4, -34, 3, 3);
     ctx.fillRect(2, -34, 3, 3);
-
     ctx.restore();
 }
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw non-scrolling sky background
     drawBackground();
 
     ctx.save();
-
-    if (screenShake > 0) {
-        ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
-    }
-
-    // 🎥 SCROLL WORLD BY CAMERA OFFSET
+    if (screenShake > 0) ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
     ctx.translate(-Math.floor(cameraX), 0);
 
     platforms.forEach(p => {
         if (p.type === 'crumbling' && p.van && p.van.destroyed) return;
 
-        ctx.fillStyle = currentTheme.platform;
+        // Base platform colors
+        ctx.fillStyle = (p.type === 'bounce') ? '#facc15' : currentTheme.platform;
         ctx.fillRect(p.x, p.y, p.w, p.h);
 
-        ctx.fillStyle = currentTheme.base;
+        ctx.fillStyle = (p.type === 'bounce') ? '#ca8a04' : currentTheme.base;
         ctx.fillRect(p.x, p.y + 8, p.w, p.h - 8);
 
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+        // 🎯 DIAMOND-PLATE / BLOCK TEXTURE overlay (from images)
+        ctx.save();
+        ctx.globalAlpha = 0.12;
+        ctx.fillStyle = '#000000';
+        for (let tx = p.x; tx < p.x + p.w; tx += 12) {
+            for (let ty = p.y; ty < p.y + 24; ty += 12) {
+                if ((tx + ty) % 24 === 0) ctx.fillRect(tx, ty, 6, 6);
+            }
+        }
+        ctx.restore();
+
+        // Edge highlights
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
         ctx.fillRect(p.x, p.y, p.w, 3);
         ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
-        ctx.fillRect(p.x, p.y, 2, p.h);
-        ctx.fillRect(p.x + p.w - 2, p.y, 2, p.h);
-
-        if (p.type === 'bounce') {
-            ctx.fillStyle = '#22c55e';
-            ctx.fillRect(p.x + 4, p.y - 6, p.w - 8, 6);
-        } else if (p.type === 'conveyor') {
-            ctx.fillStyle = '#f59e0b';
-            ctx.fillRect(p.x, p.y + 2, p.w, 4);
-        }
+        ctx.fillRect(p.x + p.w - 3, p.y, 3, p.h);
     });
 
     checkpointsList.forEach(cp => {
         ctx.fillStyle = '#64748b';
         ctx.fillRect(cp.x, cp.y, 4, cp.h);
-
-        ctx.fillStyle = cp.reached ? '#22c55e' : '#facc15';
-        let wave = Math.sin(bgTimer * 4) * 3;
-        ctx.beginPath();
-        ctx.moveTo(cp.x + 4, cp.y);
-        ctx.lineTo(cp.x + 20 + wave, cp.y + 5);
-        ctx.lineTo(cp.x + 4, cp.y + 12);
-        ctx.fill();
+        ctx.fillStyle = cp.reached ? '#22c55e' : '#cbd5e1';
+        ctx.beginPath(); ctx.moveTo(cp.x + 4, cp.y); ctx.lineTo(cp.x + 20, cp.y + 5); ctx.lineTo(cp.x + 4, cp.y + 12); ctx.fill();
     });
 
     coinsList.forEach(c => {
         if (!c.collected) {
             let pulse = Math.sin(bgTimer * 5) * 1.5;
             ctx.fillStyle = '#facc15';
-            ctx.beginPath();
-            ctx.arc(c.x, c.y, 7 + pulse, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(c.x - 2, c.y - 2, 3, 3);
+            ctx.beginPath(); ctx.arc(c.x, c.y, 7 + pulse, 0, Math.PI * 2); ctx.fill();
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(c.x - 2, c.y - 2, 3, 3);
         }
     });
 
-    hazards.forEach(h => drawSpikes(h));
+    // 🎯 DRAW LAVA BLOCKS INSTEAD OF SPIKES
+    hazards.forEach(h => drawLavaBlock(h));
 
     lasers.forEach(l => {
         let lx = l.cx + Math.cos(l.angle) * l.length;
         let ly = l.cy + Math.sin(l.angle) * l.length;
-        ctx.strokeStyle = '#ef4444';
-        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#ef4444'; ctx.lineWidth = 4;
         ctx.beginPath(); ctx.moveTo(l.cx, l.cy); ctx.lineTo(lx, ly); ctx.stroke();
     });
 
-    // Exit Door
-    ctx.fillStyle = '#f59e0b';
-    ctx.fillRect(exitDoor.x, exitDoor.y, exitDoor.w, exitDoor.h);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 12px Arial';
-    ctx.fillText('EXIT', exitDoor.x + 8, exitDoor.y + 36);
+    ctx.fillStyle = '#f59e0b'; ctx.fillRect(exitDoor.x, exitDoor.y, exitDoor.w, exitDoor.h);
+    ctx.fillStyle = '#ffffff'; ctx.font = 'bold 12px Arial'; ctx.fillText('EXIT', exitDoor.x + 8, exitDoor.y + 36);
 
     particles.forEach(p => {
-        ctx.fillStyle = p.color;
-        ctx.globalAlpha = p.life;
-        ctx.fillRect(p.x, p.y, p.size, p.size);
-        ctx.globalAlpha = 1.0;
+        ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+        ctx.fillRect(p.x, p.y, p.size, p.size); ctx.globalAlpha = 1.0;
     });
 
     drawTCharacter(player.x, player.y);
-
     ctx.restore();
 
     if (isGameWon) {
-        ctx.fillStyle = 'rgba(15, 23, 42, 0.95)';
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
-        ctx.fillStyle = '#fde047';
-        ctx.font = 'bold 36px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText('OBBYX: STAGE RUSH CLEARED!', canvas.width / 2, canvas.height / 2 - 20);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '18px Arial';
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.95)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#fde047'; ctx.font = 'bold 36px Arial'; ctx.textAlign = 'center';
+        ctx.fillText('ALL 15 STAGES CLEARED!', canvas.width / 2, canvas.height / 2 - 20);
+        ctx.fillStyle = '#ffffff'; ctx.font = '18px Arial';
         ctx.fillText(`Total Deaths: ${deaths} | Time: ${timerDisplayUI.innerText}`, canvas.width / 2, canvas.height / 2 + 20);
     }
 }
 
-function gameLoop() {
-    update();
-    draw();
-    requestAnimationFrame(gameLoop);
-}
+function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
 
 loadProgress();
 coinCounterUI.innerText = `🪙 ${coins}`;
 loadLevel(currentLevel);
 gameLoop();
 
-// 📱 UNIVERSAL MOBILE TOUCH CONTROLS
 function setupMobileControls() {
     const btnLeft = document.getElementById('btn-left');
     const btnRight = document.getElementById('btn-right');
     const btnJump = document.getElementById('btn-jump');
-
     if (!btnLeft || !btnRight || !btnJump) return;
 
     function attachButtonEvent(element, onPressStart, onPressEnd) {
         element.style.touchAction = 'none';
-
-        const handleStart = (e) => {
-            if (e.cancelable) e.preventDefault();
-            initAudio();
-            onPressStart();
-        };
-
-        const handleEnd = (e) => {
-            if (e.cancelable) e.preventDefault();
-            if (onPressEnd) onPressEnd();
-        };
-
+        const handleStart = (e) => { if (e.cancelable) e.preventDefault(); initAudio(); onPressStart(); };
+        const handleEnd = (e) => { if (e.cancelable) e.preventDefault(); if (onPressEnd) onPressEnd(); };
         element.addEventListener('pointerdown', handleStart, { passive: false });
         element.addEventListener('pointerup', handleEnd, { passive: false });
         element.addEventListener('pointercancel', handleEnd, { passive: false });
-
-        element.addEventListener('touchstart', handleStart, { passive: false });
-        element.addEventListener('touchend', handleEnd, { passive: false });
     }
 
-    attachButtonEvent(btnLeft, 
-        () => { keys['a'] = true; keys['arrowleft'] = true; }, 
-        () => { keys['a'] = false; keys['arrowleft'] = false; }
-    );
-
-    attachButtonEvent(btnRight, 
-        () => { keys['d'] = true; keys['arrowright'] = true; }, 
-        () => { keys['d'] = false; keys['arrowright'] = false; }
-    );
-
-    attachButtonEvent(btnJump, 
-        () => { triggerJump(); }, 
-        null
-    );
+    attachButtonEvent(btnLeft, () => { keys['arrowleft'] = true; }, () => { keys['arrowleft'] = false; });
+    attachButtonEvent(btnRight, () => { keys['arrowright'] = true; }, () => { keys['arrowright'] = false; });
+    attachButtonEvent(btnJump, () => { keys['space'] = true; triggerJump(); }, () => { keys['space'] = false; });
 }
-
-if (document.readyState === 'loading') {
-    window.addEventListener('DOMContentLoaded', setupMobileControls);
-} else {
-    setupMobileControls();
-}
+setupMobileControls();
