@@ -88,6 +88,23 @@ let screenShake = 0;
 let bgTimer = 0;
 let cameraX = 0;
 
+// Background Animation Elements (Ember, Stars, Digital Particles)
+let bgParticles = [];
+function initBgParticles() {
+    bgParticles = [];
+    for (let i = 0; i < 40; i++) {
+        bgParticles.push({
+            x: Math.random() * canvas.width * 2,
+            y: Math.random() * canvas.height,
+            size: Math.random() * 3 + 1,
+            speedY: Math.random() * 1.5 + 0.5,
+            speedX: (Math.random() - 0.5) * 0.8,
+            alpha: Math.random()
+        });
+    }
+}
+initBgParticles();
+
 const SKINS = [
     { id: 'yellow', name: 'Yellow', cost: 0, color: '#fde047', dark: '#ca8a04' },
     { id: 'red', name: 'Ruby', cost: 10, color: '#ef4444', dark: '#991b1b' },
@@ -118,12 +135,13 @@ let lasers = [];
 let particles = [];
 let exitDoor = { x: 880, y: 300, w: 45, h: 65 };
 
+// 🎯 ADVANCED GAMING THEMES
 const THEMES = [
-    { name: "Gray Blocks", sky: ["#d1d5db", "#f3f4f6"], platform: "#64748b", base: "#475569" }, 
-    { name: "Lava Cave", sky: ["#450a0a", "#7f1d1d"], platform: "#3f3f46", base: "#27272a" },
-    { name: "Sky High", sky: ["#0284c7", "#bae6fd"], platform: "#cbd5e1", base: "#94a3b8" },
-    { name: "Neon District", sky: ["#311042", "#c084fc"], platform: "#2dd4bf", base: "#0f766e" },
-    { name: "Desert Ruins", sky: ["#7c2d12", "#fdba74"], platform: "#d97706", base: "#b45309" }
+    { id: 'neon', name: "Neon Synthwave", sky: ["#1e1b4b", "#311042"], platform: "#22d3ee", base: "#0891b2" }, 
+    { id: 'lava', name: "Lava Core", sky: ["#450a0a", "#180202"], platform: "#dc2626", base: "#7f1d1d" },
+    { id: 'space', name: "Cosmic Void", sky: ["#020617", "#0f172a"], platform: "#38bdf8", base: "#0284c7" },
+    { id: 'cyber', name: "Cyber Matrix", sky: ["#022c22", "#064e3b"], platform: "#34d399", base: "#059669" },
+    { id: 'geo', name: "Geometric Gold", sky: ["#291e0a", "#451a03"], platform: "#fbbf24", base: "#b45309" }
 ];
 let currentTheme = THEMES[0];
 
@@ -140,7 +158,7 @@ function spawnParticles(x, y, count, color, type = 'dust') {
     }
 }
 
-// 🎯 COMPLETELY UNIQUE HANDCRAFTED STAGES
+// 🎯 LONGER STAGES WITH MORE VARIETY
 function loadLevel(levelNum) {
     platforms = []; hazards = []; coinsList = []; checkpointsList = []; lasers = [];
     checkpoint = { x: 50, y: 350 };
@@ -151,154 +169,252 @@ function loadLevel(levelNum) {
     levelTitleUI.innerText = `Stage ${levelNum} / ${TOTAL_LEVELS}`;
     themeNameUI.innerText = `Theme: ${currentTheme.name}`;
 
-    // Helper functions for easy level building
     const addP = (x, y, w, h, type = 'normal', move = null, van = null) => platforms.push({ x, y, w, h, type, move, van });
-    const addH = (x, y, w, h) => hazards.push({ x, y, w, h });
-    const addC = (x, y) => checkpointsList.push({ x: x, y: y, w: 20, h: 30, reached: false });
+    const addH = (type, x, y, w, h) => hazards.push({ type, x, y, w, h, rotation: 0 });
+    const addC = (x, y) => checkpointsList.push({ x, y, w: 20, h: 30, reached: false });
     const addCoin = (x, y) => coinsList.push({ x, y, collected: false });
     const addL = (cx, cy, length, speed) => lasers.push({ cx, cy, length, angle: 0, speed });
 
     // Start Platform
-    addP(20, 400, 100, 200);
+    addP(20, 400, 120, 200);
 
-    let cx = 150; 
-    let cy = 380;
+    let cx = 160; 
+    let cy = 400;
 
+    // Build unique, multi-section long levels
     switch (levelNum) {
-        case 1: // The Basics
-            addP(170, 400, 120, 200);
-            addP(340, 400, 120, 200);
-            addC(400, 370);
-            addP(510, 400, 120, 200);
-            addCoin(570, 340);
-            cx = 680; cy = 400;
-            break;
-        case 2: // Staircase
-            addP(180, 360, 90, 200);
-            addP(320, 320, 90, 200);
-            addC(360, 290);
-            addP(460, 280, 90, 200);
-            addCoin(505, 220);
-            addP(600, 340, 90, 200);
-            cx = 740; cy = 380;
-            break;
-        case 3: // Gap Jumper
-            addP(180, 400, 60, 200);
-            addP(310, 400, 60, 200);
-            addC(330, 370);
-            addP(450, 400, 60, 200);
-            addP(590, 400, 60, 200);
-            cx = 720; cy = 400;
-            break;
-        case 4: // First Lava
+        case 1: // Long Introduction with Spikes
             addP(180, 400, 140, 200);
-            addH(230, 360, 40, 40); 
-            addP(380, 400, 140, 200);
-            addC(450, 370);
-            addH(430, 360, 40, 40);
-            addP(580, 400, 140, 200);
-            cx = 780; cy = 400;
-            break;
-        case 5: // Horizontal Moving Platforms
-            addP(180, 400, 100, 200, 'moving', { axis: 'x', dir: 1, range: 60, startX: 180, speed: 1 });
-            addP(400, 400, 100, 200);
-            addC(450, 370);
-            addP(580, 400, 100, 200, 'moving', { axis: 'x', dir: -1, range: 60, startX: 580, speed: 1.5 });
-            cx = 800; cy = 400;
-            break;
-        case 6: // Don't Look Down (Crumbling)
-            addP(160, 400, 80, 200, 'crumbling', null, { touched: false, timer: 40, destroyed: false });
-            addP(250, 400, 80, 200, 'crumbling', null, { touched: false, timer: 30, destroyed: false });
-            addP(340, 400, 80, 200, 'crumbling', null, { touched: false, timer: 20, destroyed: false });
-            addC(450, 370);
-            addP(440, 400, 100, 200);
-            addP(580, 400, 80, 200, 'crumbling', null, { touched: false, timer: 15, destroyed: false });
-            cx = 720; cy = 400;
-            break;
-        case 7: // High Bounce
-            addP(180, 450, 80, 200, 'bounce');
-            addP(320, 300, 80, 200);
-            addC(360, 270);
-            addP(460, 450, 80, 200, 'bounce');
-            addP(600, 250, 80, 200);
-            cx = 750; cy = 250;
-            break;
-        case 8: // The Floor is Lava!
-            addH(120, 450, 800, 200); 
-            addP(200, 380, 80, 20);
-            addP(350, 380, 80, 20, 'moving', { axis: 'x', dir: 1, range: 50, startX: 350, speed: 1 });
-            addC(450, 350);
-            addP(500, 380, 80, 20);
-            addP(650, 380, 80, 20, 'moving', { axis: 'x', dir: -1, range: 60, startX: 650, speed: 1.2 });
-            cx = 850; cy = 350;
-            break;
-        case 9: // Vertical Elevator
-            addP(160, 400, 80, 20, 'moving', { axis: 'y', dir: -1, range: 80, startY: 320, speed: 0.5 });
-            addP(300, 240, 80, 200);
-            addC(340, 210);
-            addP(440, 240, 80, 20, 'moving', { axis: 'y', dir: 1, range: 80, startY: 320, speed: 0.5 });
-            addP(580, 400, 80, 200);
-            cx = 720; cy = 400;
-            break;
-        case 10: // Crumble & Bounce Mixed
-            addP(180, 400, 80, 20, 'crumbling', null, { touched: false, timer: 30, destroyed: false });
-            addP(300, 400, 60, 20, 'bounce');
-            addP(420, 250, 80, 200);
-            addC(460, 220);
-            addP(560, 400, 60, 20, 'bounce');
-            addP(680, 250, 80, 200);
-            cx = 820; cy = 250;
-            break;
-        case 11: // Laser Introduction
-            addP(180, 400, 150, 200);
-            addL(255, 300, 80, 0.02);
-            addC(360, 370);
-            addP(390, 400, 150, 200);
-            addL(465, 300, 80, -0.02);
-            addP(600, 400, 100, 200);
-            cx = 760; cy = 400;
-            break;
-        case 12: // Moving + Lasers
-            addP(180, 400, 100, 200, 'moving', { axis: 'x', dir: 1, range: 40, startX: 180, speed: 1 });
-            addL(230, 300, 70, 0.03);
-            addC(360, 370);
-            addP(350, 400, 100, 200);
-            addP(500, 400, 100, 200, 'moving', { axis: 'x', dir: -1, range: 40, startX: 500, speed: 1 });
-            addL(550, 300, 70, 0.03);
-            cx = 700; cy = 400;
-            break;
-        case 13: // Precision Lava Jumps
-            addP(180, 400, 60, 200); addH(240, 400, 60, 200);
-            addP(300, 400, 60, 200); addC(330, 370); addH(360, 400, 60, 200);
-            addP(420, 400, 60, 200); addH(480, 400, 60, 200);
-            addP(540, 400, 60, 200);
-            cx = 660; cy = 400;
-            break;
-        case 14: // The Gauntlet
-            addP(180, 420, 80, 200); addL(220, 380, 40, 0.04);
-            addP(300, 360, 80, 200); addL(340, 320, 40, 0.04);
+            addH('spike', 230, 380, 40, 20);
+            addP(370, 360, 120, 200);
             addC(410, 330);
-            addP(420, 300, 80, 20, 'crumbling', null, { touched: false, timer: 20, destroyed: false });
-            addL(460, 260, 40, 0.04);
-            addP(540, 240, 80, 20, 'bounce');
-            cx = 680; cy = 100;
+            addP(540, 360, 140, 200);
+            addH('spike', 580, 340, 50, 20);
+            addP(730, 380, 120, 200);
+            addC(770, 350);
+            addP(900, 380, 140, 200);
+            addH('lava', 940, 340, 40, 40);
+            addP(1090, 400, 140, 200);
+            cx = 1280; cy = 400;
             break;
-        case 15: // The Final Exam (Mix of all mechanics)
+
+        case 2: // Spike Alley & Saw Introduction
+            addP(180, 400, 120, 200);
+            addH('saw', 320, 340, 45, 45);
+            addP(380, 400, 120, 200);
+            addC(420, 370);
+            addP(550, 360, 120, 200);
+            addH('spike', 580, 340, 60, 20);
+            addP(720, 320, 120, 200);
+            addH('saw', 860, 260, 45, 45);
+            addC(900, 290);
+            addP(900, 320, 120, 200);
+            addP(1070, 360, 120, 200);
+            addH('spike', 1100, 340, 50, 20);
+            addP(1240, 400, 140, 200);
+            cx = 1430; cy = 400;
+            break;
+
+        case 3: // Crumbling Bridge & Saws
+            for (let i = 0; i < 5; i++) {
+                addP(180 + (i * 90), 400, 75, 200, 'crumbling', null, { touched: false, timer: 35, destroyed: false });
+                if (i === 2) addCoin(180 + (i * 90) + 25, 350);
+            }
+            addC(650, 370);
+            addP(630, 400, 120, 200);
+            addH('saw', 780, 350, 50, 50);
+            addP(860, 400, 120, 200);
+            for (let i = 0; i < 4; i++) {
+                addP(1020 + (i * 90), 400, 75, 200, 'crumbling', null, { touched: false, timer: 30, destroyed: false });
+            }
+            addC(1400, 370);
+            addP(1380, 400, 140, 200);
+            addH('spike', 1420, 380, 60, 20);
+            addP(1570, 400, 140, 200);
+            cx = 1760; cy = 400;
+            break;
+
+        case 4: // Vertical & Horizontal Movers
+            addP(180, 400, 100, 20, 'moving', { axis: 'x', dir: 1, range: 60, startX: 180, speed: 1.2 });
+            addP(380, 350, 100, 200);
+            addC(410, 320);
+            addP(530, 350, 90, 20, 'moving', { axis: 'y', dir: -1, range: 70, startY: 350, speed: 1 });
+            addP(670, 240, 110, 200);
+            addH('spike', 700, 220, 50, 20);
+            addC(800, 210);
+            addP(830, 240, 100, 20, 'moving', { axis: 'x', dir: 1, range: 70, startX: 830, speed: 1.5 });
+            addP(1050, 280, 120, 200);
+            addH('saw', 1200, 240, 50, 50);
+            addP(1280, 350, 140, 200);
+            cx = 1470; cy = 350;
+            break;
+
+        case 5: // Bounce Pads & High Jumps
+            addP(180, 450, 80, 200, 'bounce');
+            addP(320, 280, 100, 200);
+            addH('spike', 340, 260, 40, 20);
+            addC(360, 250);
+            addP(460, 450, 80, 200, 'bounce');
+            addP(600, 240, 100, 200);
+            addH('saw', 730, 200, 50, 50);
+            addC(820, 210);
+            addP(800, 240, 100, 200);
+            addP(940, 450, 80, 200, 'bounce');
+            addP(1080, 250, 140, 200);
+            cx = 1270; cy = 250;
+            break;
+
+        case 6: // Giant Lava Sea
+            addH('lava', 120, 480, 1400, 100);
+            addP(180, 400, 80, 20);
+            addP(310, 380, 80, 20, 'moving', { axis: 'x', dir: 1, range: 50, startX: 310, speed: 1.2 });
+            addC(430, 350);
+            addP(430, 380, 80, 20);
+            addH('saw', 550, 320, 45, 45);
+            addP(630, 380, 80, 20);
+            addC(750, 350);
+            addP(750, 380, 80, 20, 'moving', { axis: 'y', dir: -1, range: 60, startY: 380, speed: 1 });
+            addP(890, 280, 80, 20);
+            addP(1030, 320, 80, 20, 'moving', { axis: 'x', dir: -1, range: 60, startX: 1030, speed: 1.5 });
+            addP(1200, 380, 140, 200);
+            cx = 1390; cy = 380;
+            break;
+
+        case 7: // Laser Corridors
+            addP(180, 400, 160, 200);
+            addL(260, 300, 80, 0.025);
+            addC(360, 370);
+            addP(380, 400, 160, 200);
+            addL(460, 300, 80, -0.025);
+            addP(580, 400, 160, 200);
+            addH('spike', 620, 380, 80, 20);
+            addC(760, 370);
+            addP(780, 400, 160, 200);
+            addL(860, 300, 90, 0.03);
+            addP(990, 400, 140, 200);
+            cx = 1180; cy = 400;
+            break;
+
+        case 8: // Precision Spikes & Crumble
+            addP(180, 400, 60, 200); addH('spike', 240, 380, 60, 20);
+            addP(300, 400, 60, 200); addC(310, 370);
+            for (let i = 0; i < 3; i++) {
+                addP(400 + (i * 80), 400, 60, 200, 'crumbling', null, { touched: false, timer: 25, destroyed: false });
+            }
+            addC(660, 370);
+            addP(650, 400, 80, 200);
+            addH('saw', 760, 340, 50, 50);
+            addP(840, 400, 60, 200); addH('spike', 900, 380, 60, 20);
+            addP(960, 400, 120, 200);
+            cx = 1130; cy = 400;
+            break;
+
+        case 9: // Elevator Towers & Lasers
+            addP(180, 400, 80, 20, 'moving', { axis: 'y', dir: -1, range: 90, startY: 330, speed: 0.8 });
+            addP(310, 220, 100, 200);
+            addL(360, 140, 70, 0.03);
+            addC(340, 190);
+            addP(460, 220, 80, 20, 'moving', { axis: 'x', dir: 1, range: 60, startX: 460, speed: 1.2 });
+            addP(640, 260, 100, 200);
+            addH('saw', 770, 220, 50, 50);
+            addC(860, 230);
+            addP(850, 260, 80, 20, 'moving', { axis: 'y', dir: 1, range: 80, startY: 320, speed: 1 });
+            addP(1000, 380, 140, 200);
+            cx = 1190; cy = 380;
+            break;
+
+        case 10: // The Mixed Marathon (Part 1)
+            addP(180, 400, 80, 20, 'crumbling', null, { touched: false, timer: 30, destroyed: false });
+            addP(290, 400, 60, 20, 'bounce');
+            addP(400, 250, 100, 200); addH('spike', 430, 230, 40, 20);
+            addC(430, 220);
+            addP(540, 250, 80, 20, 'moving', { axis: 'x', dir: 1, range: 60, startX: 540, speed: 1.2 });
+            addL(680, 180, 75, 0.035);
+            addP(750, 250, 100, 200);
+            addC(780, 220);
+            addP(890, 450, 80, 200, 'bounce');
+            addP(1030, 280, 140, 200);
+            cx = 1220; cy = 280;
+            break;
+
+        case 11: // Sawblade Symphony
+            addP(180, 400, 120, 200);
+            addH('saw', 320, 330, 55, 55);
+            addP(400, 400, 120, 200);
+            addC(440, 370);
+            addH('saw', 540, 330, 55, 55);
+            addP(620, 400, 120, 200);
+            addH('saw', 760, 330, 55, 55);
+            addC(840, 370);
+            addP(840, 400, 120, 200);
+            addH('saw', 980, 330, 55, 55);
+            addP(1060, 400, 140, 200);
+            cx = 1250; cy = 400;
+            break;
+
+        case 12: // Moving Laser Platforms
+            addP(180, 400, 100, 200, 'moving', { axis: 'x', dir: 1, range: 50, startX: 180, speed: 1.2 });
+            addL(230, 300, 75, 0.03);
+            addC(360, 370);
+            addP(350, 400, 120, 200);
+            addH('spike', 380, 380, 60, 20);
+            addP(510, 400, 100, 200, 'moving', { axis: 'x', dir: -1, range: 50, startX: 510, speed: 1.2 });
+            addL(560, 300, 75, -0.03);
+            addC(700, 370);
+            addP(690, 400, 120, 200);
+            addH('saw', 830, 320, 50, 50);
+            addP(910, 400, 140, 200);
+            cx = 1100; cy = 400;
+            break;
+
+        case 13: // The Sky Climb
+            addP(180, 450, 70, 20, 'bounce');
+            addP(280, 300, 80, 20);
+            addP(390, 200, 80, 20, 'moving', { axis: 'x', dir: 1, range: 40, startX: 390, speed: 1 });
+            addC(500, 170);
+            addP(500, 200, 100, 200);
+            addH('spike', 520, 180, 50, 20);
+            addP(640, 350, 70, 20, 'bounce');
+            addP(750, 220, 80, 20, 'moving', { axis: 'y', dir: -1, range: 60, startY: 220, speed: 1 });
+            addP(880, 160, 140, 200);
+            cx = 1070; cy = 160;
+            break;
+
+        case 14: // Ultimate Precision Corridor
+            addP(180, 420, 80, 200); addL(220, 370, 45, 0.04);
+            addP(300, 360, 80, 200); addH('saw', 400, 300, 50, 50);
+            addC(430, 330);
+            addP(430, 360, 80, 20, 'crumbling', null, { touched: false, timer: 20, destroyed: false });
+            addH('spike', 530, 340, 60, 20);
+            addP(610, 360, 80, 200);
+            addC(640, 330);
+            addP(730, 360, 70, 20, 'bounce');
+            addP(840, 220, 140, 200);
+            cx = 1030; cy = 220;
+            break;
+
+        case 15: // 🏆 THE GRAND MASTER GAUNTLET
             addP(160, 400, 80, 20); 
-            addP(280, 400, 60, 20, 'crumbling', null, { touched: false, timer: 30, destroyed: false });
-            addP(400, 450, 60, 20, 'bounce');
-            addC(520, 250);
-            addP(500, 280, 80, 200); 
-            addP(620, 280, 80, 20, 'moving', { axis: 'x', dir: 1, range: 40, startX: 620, speed: 1.5 });
-            addL(660, 200, 60, 0.05);
-            addP(780, 280, 60, 20, 'crumbling', null, { touched: false, timer: 20, destroyed: false });
-            cx = 900; cy = 280;
+            addH('saw', 260, 340, 50, 50);
+            addP(320, 400, 60, 20, 'crumbling', null, { touched: false, timer: 25, destroyed: false });
+            addP(430, 450, 60, 20, 'bounce');
+            addC(540, 250);
+            addP(520, 280, 100, 200); 
+            addH('spike', 540, 260, 50, 20);
+            addP(660, 280, 80, 20, 'moving', { axis: 'x', dir: 1, range: 50, startX: 660, speed: 1.5 });
+            addL(780, 200, 65, 0.05);
+            addC(880, 250);
+            addP(860, 280, 80, 200);
+            addH('saw', 970, 220, 55, 55);
+            addP(1050, 280, 60, 20, 'crumbling', null, { touched: false, timer: 20, destroyed: false });
+            addP(1160, 280, 140, 200);
+            cx = 1350; cy = 280;
             break;
     }
 
     // End Platform & Exit Door
-    addP(cx, cy, 140, 200);
-    exitDoor = { x: cx + 50, y: cy - 65, w: 45, h: 65 };
+    addP(cx, cy, 150, 200);
+    exitDoor = { x: cx + 55, y: cy - 65, w: 45, h: 65 };
 }
 
 function respawnPlayer() {
@@ -409,9 +525,8 @@ function update() {
 
     player.grounded = false;
     
-    // Process Platform Updates & Collisions
+    // Platforms & Collisions
     platforms.forEach(p => {
-        // Handle Moving Platforms
         if (p.type === 'moving' && p.move) {
             if (p.move.axis === 'y') {
                 p.y += p.move.dir * p.move.speed;
@@ -422,14 +537,12 @@ function update() {
             }
         }
 
-        // Handle Crumbling Platforms
         if (p.type === 'crumbling' && p.van && p.van.touched) {
             p.van.timer--;
             if (p.van.timer <= 0) p.van.destroyed = true;
         }
         if (p.type === 'crumbling' && p.van && p.van.destroyed) return;
 
-        // Player Collision
         if (player.x + player.width > p.x && player.x < p.x + p.w) {
             if (player.y + player.height >= p.y && player.y + player.height <= p.y + 18 && player.vy >= 0) {
                 if (!player.grounded && player.vy > 2) { player.scaleX = 1.3; player.scaleY = 0.7; }
@@ -448,9 +561,11 @@ function update() {
         }
     });
 
+    // Multi-hazard collisions
     hazards.forEach(h => {
-        if (player.x + player.width - 5 > h.x && player.x + 5 < h.x + h.w &&
-            player.y + player.height > h.y + 5 && player.y + 5 < h.y + h.h) {
+        h.rotation = (h.rotation || 0) + 0.1; // Rotate saws
+        if (player.x + player.width - 6 > h.x && player.x + 6 < h.x + h.w &&
+            player.y + player.height > h.y + 4 && player.y + 4 < h.y + h.h) {
             handleDeath();
         }
     });
@@ -515,8 +630,11 @@ function handleDeath() {
     respawnPlayer();
 }
 
-function drawBackground() {
+// 🎯 ANIMATED ADVANCED BACKGROUND GRAPHICS
+function drawAdvancedBackground() {
     bgTimer += 0.03;
+
+    // Sky Base Gradient
     let skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
     skyGrad.addColorStop(0, currentTheme.sky[0]);
     skyGrad.addColorStop(1, currentTheme.sky[1]);
@@ -524,42 +642,118 @@ function drawBackground() {
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
-    ctx.globalAlpha = 0.08; 
-    const offset = (cameraX * 0.15) % 120;
-    ctx.translate(-offset, 0);
     
-    const size = 60;
-    for(let y = 0; y < canvas.height + size; y += size) {
-        for(let x = 0; x < canvas.width + 300; x += size) {
-            let isEven = ((x/size + y/size) % 2 === 0);
-            ctx.beginPath();
-            if (isEven) {
-                ctx.moveTo(x, y); ctx.lineTo(x + size, y + size); ctx.lineTo(x, y + size);
-                ctx.fillStyle = '#ffffff';
-            } else {
-                ctx.moveTo(x, y); ctx.lineTo(x + size, y); ctx.lineTo(x + size, y + size);
-                ctx.fillStyle = '#000000';
-            }
-            ctx.fill();
+    if (currentTheme.id === 'neon') {
+        // Neon Synthwave Horizon Grid & Glowing Sun
+        let sunGrad = ctx.createRadialGradient(canvas.width / 2, 220, 10, canvas.width / 2, 220, 120);
+        sunGrad.addColorStop(0, '#fde047');
+        sunGrad.addColorStop(1, 'rgba(236, 72, 153, 0)');
+        ctx.fillStyle = sunGrad;
+        ctx.beginPath(); ctx.arc(canvas.width / 2, 220, 120, 0, Math.PI * 2); ctx.fill();
+
+        ctx.strokeStyle = 'rgba(236, 72, 153, 0.25)';
+        ctx.lineWidth = 1.5;
+        let gridOffset = (bgTimer * 40) % 30;
+        for (let y = 220; y < canvas.height; y += 15) {
+            ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+        }
+        for (let x = -200; x < canvas.width + 200; x += 40) {
+            ctx.beginPath(); ctx.moveTo(canvas.width / 2 + (x - canvas.width / 2) * 0.1, 220); 
+            ctx.lineTo(x, canvas.height); ctx.stroke();
+        }
+
+    } else if (currentTheme.id === 'lava') {
+        // Rising Embers
+        bgParticles.forEach(p => {
+            p.y -= p.speedY;
+            if (p.y < 0) p.y = canvas.height;
+            ctx.fillStyle = `rgba(249, 115, 22, ${p.alpha})`;
+            ctx.fillRect(p.x - cameraX * 0.2, p.y, p.size, p.size);
+        });
+
+    } else if (currentTheme.id === 'space') {
+        // Starfield
+        bgParticles.forEach((p, idx) => {
+            let px = (p.x - cameraX * 0.1) % canvas.width;
+            if (px < 0) px += canvas.width;
+            let tw = Math.sin(bgTimer * 3 + idx) * 0.3 + 0.7;
+            ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha * tw})`;
+            ctx.fillRect(px, p.y, p.size, p.size);
+        });
+
+    } else if (currentTheme.id === 'cyber') {
+        // Matrix Streaming Digital Grid
+        ctx.fillStyle = 'rgba(52, 211, 153, 0.15)';
+        bgParticles.forEach(p => {
+            p.y += p.speedY * 1.5;
+            if (p.y > canvas.height) p.y = 0;
+            let px = (p.x - cameraX * 0.2) % canvas.width;
+            if (px < 0) px += canvas.width;
+            ctx.fillRect(px, p.y, p.size * 2, p.size * 6);
+        });
+
+    } else if (currentTheme.id === 'geo') {
+        // Rotating Geometric Shards
+        ctx.strokeStyle = 'rgba(251, 191, 36, 0.15)';
+        ctx.lineWidth = 2;
+        for (let i = 0; i < 8; i++) {
+            let sx = ((i * 180) - cameraX * 0.2) % (canvas.width + 200);
+            let sy = 100 + Math.sin(bgTimer + i) * 30;
+            ctx.save();
+            ctx.translate(sx, sy);
+            ctx.rotate(bgTimer * 0.5 + i);
+            ctx.strokeRect(-20, -20, 40, 40);
+            ctx.restore();
         }
     }
+
     ctx.restore();
 }
 
-function drawLavaBlock(h) {
-    ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
-    ctx.fillRect(h.x - 2, h.y - 2, h.w + 4, h.h + 4);
-    ctx.fillStyle = '#dc2626';
-    ctx.fillRect(h.x, h.y, h.w, h.h);
-    ctx.fillStyle = 'rgba(0,0,0,0.3)';
-    ctx.fillRect(h.x, h.y + h.h - 5, h.w, 5);
-    ctx.fillRect(h.x + h.w - 5, h.y, 5, h.h);
-    ctx.strokeStyle = '#991b1b';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(h.x + 5, h.y + 5); ctx.lineTo(h.x + 15, h.y + 15);
-    ctx.moveTo(h.x + h.w - 10, h.y + 5); ctx.lineTo(h.x + h.w - 5, h.y + 10);
-    ctx.stroke();
+// 🎯 DRAW HAZARDS (Spikes, Saws, Lava)
+function drawHazard(h) {
+    if (h.type === 'spike') {
+        ctx.fillStyle = '#94a3b8';
+        ctx.strokeStyle = '#334155';
+        ctx.lineWidth = 2;
+        let count = Math.floor(h.w / 15);
+        let spikeW = h.w / count;
+        for (let i = 0; i < count; i++) {
+            ctx.beginPath();
+            ctx.moveTo(h.x + (i * spikeW), h.y + h.h);
+            ctx.lineTo(h.x + (i * spikeW) + (spikeW / 2), h.y);
+            ctx.lineTo(h.x + ((i + 1) * spikeW), h.y + h.h);
+            ctx.closePath();
+            ctx.fill(); ctx.stroke();
+        }
+    } else if (h.type === 'saw') {
+        ctx.save();
+        ctx.translate(h.x + h.w / 2, h.y + h.h / 2);
+        ctx.rotate(h.rotation);
+        ctx.fillStyle = '#cbd5e1';
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+            let a = (i * Math.PI / 4);
+            ctx.lineTo(Math.cos(a) * (h.w / 2), Math.sin(a) * (h.h / 2));
+            let a2 = a + Math.PI / 8;
+            ctx.lineTo(Math.cos(a2) * (h.w / 4), Math.sin(a2) * (h.h / 4));
+        }
+        ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        ctx.fillStyle = '#ef4444';
+        ctx.beginPath(); ctx.arc(0, 0, 6, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+    } else if (h.type === 'lava') {
+        ctx.fillStyle = 'rgba(239, 68, 68, 0.4)';
+        ctx.fillRect(h.x - 2, h.y - 2, h.w + 4, h.h + 4);
+        ctx.fillStyle = '#dc2626';
+        ctx.fillRect(h.x, h.y, h.w, h.h);
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.fillRect(h.x, h.y + h.h - 5, h.w, 5);
+        ctx.fillRect(h.x + h.w - 5, h.y, 5, h.h);
+    }
 }
 
 function drawTCharacter(x, y) {
@@ -581,7 +775,7 @@ function drawTCharacter(x, y) {
 
 function draw() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawBackground();
+    drawAdvancedBackground();
 
     ctx.save();
     if (screenShake > 0) ctx.translate((Math.random() - 0.5) * screenShake, (Math.random() - 0.5) * screenShake);
@@ -628,7 +822,7 @@ function draw() {
         }
     });
 
-    hazards.forEach(h => drawLavaBlock(h));
+    hazards.forEach(h => drawHazard(h));
 
     lasers.forEach(l => {
         let lx = l.cx + Math.cos(l.angle) * l.length;
