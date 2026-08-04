@@ -3,49 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Obby Stage Rush - Easy Mode & Advanced Characters</title>
+    <title>Obby Stage Rush - Advanced Edition</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #0f172a; color: white; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
-        #game-container { position: relative; width: 100vw; height: 100vh; max-width: 960px; max-height: 540px; background: #000; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+        #game-container { position: relative; width: 100vw; height: 100vh; max-width: 960px; max-height: 540px; background: #000; box-shadow: 0 0 30px rgba(0,0,0,0.8); }
         canvas { display: block; width: 100%; height: 100%; object-fit: contain; }
         
         /* UI Overlay */
         #ui-layer { position: absolute; top: 0; left: 0; width: 100%; padding: 15px; display: flex; justify-content: space-between; pointer-events: none; }
-        .ui-box { background: rgba(15, 23, 42, 0.8); padding: 10px 15px; border-radius: 8px; border: 2px solid #334155; pointer-events: auto; }
-        #top-left h2 { font-size: 18px; color: #f8fafc; }
+        .ui-box { background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(5px); padding: 10px 15px; border-radius: 8px; border: 1px solid #334155; pointer-events: auto; }
+        #top-left h2 { font-size: 18px; color: #f8fafc; text-shadow: 0 0 5px rgba(255,255,255,0.5); }
         #top-left p { font-size: 12px; color: #94a3b8; margin-top: 5px; }
-        #top-center { font-size: 20px; font-weight: bold; color: #38bdf8; text-align: center; }
+        #top-center { font-size: 20px; font-weight: bold; color: #38bdf8; text-align: center; text-shadow: 0 0 8px rgba(56,189,248,0.6); }
         #top-right { text-align: right; }
         #top-right p { font-size: 16px; margin-bottom: 5px; font-weight: bold; }
         
         /* Buttons */
         .btn-row { position: absolute; bottom: 20px; right: 20px; display: flex; gap: 10px; pointer-events: auto; }
-        .action-btn { background: #3b82f6; color: white; border: none; padding: 10px 20px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; border-bottom: 4px solid #1d4ed8; transition: transform 0.1s; }
-        .action-btn:active { transform: translateY(4px); border-bottom: 0px; margin-top: 4px; }
+        .action-btn { background: #3b82f6; color: white; border: none; padding: 10px 20px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; border-bottom: 4px solid #1d4ed8; transition: transform 0.1s; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .action-btn:active { transform: translateY(4px); border-bottom: 0px; margin-top: 4px; box-shadow: none; }
         .action-btn.shop { background: #f59e0b; border-color: #b45309; }
 
         /* Modals */
-        .modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center; z-index: 100; pointer-events: auto; }
+        .modal { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); display: flex; justify-content: center; align-items: center; z-index: 100; pointer-events: auto; }
         .hidden { display: none !important; }
-        .modal-content { background: #1e293b; padding: 30px; border-radius: 12px; width: 90%; max-width: 600px; text-align: center; border: 2px solid #475569; position: relative; max-height: 90%; overflow-y: auto; }
+        .modal-content { background: #1e293b; padding: 30px; border-radius: 12px; width: 90%; max-width: 600px; text-align: center; border: 2px solid #475569; position: relative; max-height: 90%; overflow-y: auto; box-shadow: 0 0 20px rgba(0,0,0,0.8); }
         .modal-content h1 { margin-bottom: 20px; color: #f8fafc; }
         .close-btn { position: absolute; top: 15px; right: 15px; background: #ef4444; border: none; color: white; width: 30px; height: 30px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         
         /* Shop Grid */
         #shop-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; margin-bottom: 20px; }
         .shop-card { background: #334155; padding: 15px; border-radius: 8px; text-align: center; border: 2px solid transparent; transition: 0.2s; }
-        .shop-card.selected { border-color: #22c55e; background: #064e3b; }
+        .shop-card.selected { border-color: #22c55e; background: #064e3b; box-shadow: 0 0 15px rgba(34, 197, 94, 0.4); }
         .shop-card h4 { margin-bottom: 5px; color: #f8fafc; }
         .shop-card p { font-size: 14px; color: #cbd5e1; margin-bottom: 10px; }
-        .shop-card button { margin-top: 5px; width: 100%; padding: 8px; border: none; border-radius: 4px; background: #3b82f6; color: white; font-weight: bold; cursor: pointer; }
+        .shop-card button { margin-top: 5px; width: 100%; padding: 8px; border: none; border-radius: 4px; background: #3b82f6; color: white; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .shop-card button:hover:not(:disabled) { background: #2563eb; }
         .shop-card button:disabled { background: #64748b; cursor: not-allowed; }
 
         /* Mobile Controls */
         #mobile-controls { position: absolute; bottom: 20px; left: 20px; width: calc(100% - 40px); display: none; justify-content: space-between; pointer-events: none; }
         .d-pad { display: flex; gap: 10px; pointer-events: auto; }
-        .control-btn { width: 60px; height: 60px; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.5); border-radius: 50%; color: white; font-size: 24px; font-weight: bold; display: flex; justify-content: center; align-items: center; }
-        .control-btn:active { background: rgba(255,255,255,0.4); }
+        .control-btn { width: 60px; height: 60px; background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; color: white; font-size: 24px; font-weight: bold; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(4px); }
+        .control-btn:active { background: rgba(255,255,255,0.3); }
         .action-pad { pointer-events: auto; }
 
         @media (max-width: 768px) {
@@ -88,7 +89,6 @@
         </div>
     </div>
 
-    <!-- Shop Modal -->
     <div id="shop-modal" class="modal hidden">
         <div class="modal-content">
             <button class="close-btn" id="close-shop-btn">X</button>
@@ -104,23 +104,18 @@ const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 canvas.width = 960; canvas.height = 540;
 
-// UI Elements
 const levelTitleUI = document.getElementById('level-title');
 const coinCounterUI = document.getElementById('coin-counter');
 const deathCounterUI = document.getElementById('death-counter');
-const timerDisplayUI = document.getElementById('timer-display');
 const themeNameUI = document.getElementById('theme-name');
-
 const shopModal = document.getElementById('shop-modal');
 const openShopBtn = document.getElementById('open-shop-btn');
 const closeShopBtn = document.getElementById('close-shop-btn');
 const shopItemsContainer = document.getElementById('shop-items');
 
-// Audio Context
 let audioCtx = null;
 function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); }
 
-// SKINS - Now dictating advanced features
 const SKINS = [
     { id: 'king', name: 'King', cost: 0, color: '#fde047', dark: '#ca8a04', type: 'king' },
     { id: 'knight', name: 'Knight', cost: 10, color: '#84cc16', dark: '#4d7c0f', type: 'knight' },
@@ -134,29 +129,28 @@ const SKINS = [
     { id: 'builder', name: 'Builder', cost: 300, color: '#b45309', dark: '#78350f', type: 'builder' }
 ];
 
-let unlockedSkins = ['king'];
-let equippedSkin = SKINS[0];
-let coins = 0; let currentLevel = 1; let deaths = 0;
-let isPaused = false;
+let unlockedSkins = ['king']; let equippedSkin = SKINS[0];
+let coins = 0; let currentLevel = 1; let deaths = 0; let isPaused = false;
 
-// EASIER PHYSICS
+// 🔥 TIGHTER PHYSICS: Strict double jump, slightly faster drop
 const player = {
     x: 50, y: 350, width: 28, height: 38,
-    vx: 0, vy: 0, speed: 5.5, jumpForce: -12.5, 
-    grounded: false, jumpsLeft: 3, maxJumps: 3, 
+    vx: 0, vy: 0, speed: 6, jumpForce: -11.5, 
+    grounded: false, jumpsLeft: 2, maxJumps: 2, 
     facingRight: true, scaleX: 1, scaleY: 1
 };
-const GRAVITY = 0.45; 
-const FRICTION = 0.85; 
+const GRAVITY = 0.55; 
+const FRICTION = 0.82; 
 
 let checkpoint = { x: 50, y: 350 };
 let keys = {};
-let platforms = []; let hazards = []; let coinsList = []; let checkpointsList = []; let exitDoor = { x: 880, y: 300, w: 45, h: 65 };
-let cameraX = 0; let bgTimer = 0; let startTime = Date.now();
+let platforms = []; let spikes = []; let lavas = []; let bouncePads = []; let coinsList = []; let checkpointsList = []; let particles = []; 
+let exitDoor = { x: 880, y: 300, w: 45, h: 65 };
+let cameraX = 0; let bgTimer = 0; 
 
 const THEMES = [
-    { id: 'neon', name: "Neon Synthwave", sky: ["#1e1b4b", "#311042"], platform: "#22d3ee", base: "#0891b2" }, 
-    { id: 'lava', name: "Lava Core", sky: ["#450a0a", "#180202"], platform: "#dc2626", base: "#7f1d1d" }
+    { id: 'neon', name: "Neon Synthwave", sky: ["#0f0c29", "#302b63", "#24243e"], platform: "#0ea5e9", base: "#0284c7", grid: "#8b5cf6" }, 
+    { id: 'lava', name: "Lava Core", sky: ["#2a0800", "#5c1000", "#1f0400"], platform: "#27272a", base: "#18181b", grid: "#dc2626" }
 ];
 let currentTheme = THEMES[0];
 
@@ -172,100 +166,54 @@ function saveProgress() {
     localStorage.setItem('obby_equippedSkin', equippedSkin.id);
 }
 
-// 🌟 ADVANCED CHARACTER RENDERING ENGINE 🌟
-// Used for both the game and the shop previews!
+// Advanced Rendering Engine (same as before for shop & game)
 function drawAdvancedCharacter(context, x, y, skin, facingRight = true, scaleX = 1, scaleY = 1) {
     context.save();
     context.translate(x, y);
     context.scale(facingRight ? scaleX : -scaleX, scaleY);
-    
-    // Base Body
-    context.fillStyle = skin.color;
-    context.fillRect(-8, -38, 16, 12); // Head
-    context.fillRect(-14, -26, 28, 9); // Arms/Chest
-    context.fillRect(-7, -17, 14, 17); // Legs
-
-    // Shading
-    context.fillStyle = skin.dark;
-    context.fillRect(4, -38, 4, 12); // Head Shade
-    context.fillRect(9, -26, 5, 9);  // Arm Shade
-    
-    // Eyes
-    context.fillStyle = '#000000';
-    context.fillRect(-4, -34, 3, 3);
-    context.fillRect(2, -34, 3, 3);
+    context.fillStyle = skin.color; context.fillRect(-8, -38, 16, 12); context.fillRect(-14, -26, 28, 9); context.fillRect(-7, -17, 14, 17);
+    context.fillStyle = skin.dark; context.fillRect(4, -38, 4, 12); context.fillRect(9, -26, 5, 9);
+    context.fillStyle = '#000000'; context.fillRect(-4, -34, 3, 3); context.fillRect(2, -34, 3, 3);
 
     const type = skin.type;
-
-    // Advanced Accessories
     if (type === 'king') {
-        // Crown
-        context.fillStyle = '#fbbf24'; 
-        context.beginPath(); context.moveTo(-10, -38); context.lineTo(-10, -48); context.lineTo(-4, -42); context.lineTo(0, -49); context.lineTo(4, -42); context.lineTo(10, -48); context.lineTo(10, -38); context.fill();
-        // Red Cape
+        context.fillStyle = '#fbbf24'; context.beginPath(); context.moveTo(-10, -38); context.lineTo(-10, -48); context.lineTo(-4, -42); context.lineTo(0, -49); context.lineTo(4, -42); context.lineTo(10, -48); context.lineTo(10, -38); context.fill();
         context.fillStyle = '#dc2626'; context.fillRect(-12, -26, 4, 26);
     } else if (type === 'knight') {
-        // Helmet
         context.fillStyle = '#94a3b8'; context.fillRect(-10, -40, 20, 16);
-        context.fillStyle = '#0f172a'; context.fillRect(-10, -35, 16, 4); // Visor slit
-        // Sword
+        context.fillStyle = '#0f172a'; context.fillRect(-10, -35, 16, 4);
         context.fillStyle = '#cbd5e1'; context.fillRect(14, -28, 4, 20);
-        context.fillStyle = '#b45309'; context.fillRect(12, -22, 8, 3); // Hilt
+        context.fillStyle = '#b45309'; context.fillRect(12, -22, 8, 3);
     } else if (type === 'wizard') {
-        // Pointy Hat
-        context.fillStyle = '#1e3a8a';
-        context.beginPath(); context.moveTo(-12, -38); context.lineTo(12, -38); context.lineTo(0, -58); context.fill();
-        // White Beard
+        context.fillStyle = '#1e3a8a'; context.beginPath(); context.moveTo(-12, -38); context.lineTo(12, -38); context.lineTo(0, -58); context.fill();
         context.fillStyle = '#e2e8f0'; context.fillRect(-6, -28, 12, 8);
-        // Magic Staff
         context.fillStyle = '#78350f'; context.fillRect(14, -35, 3, 32);
         context.fillStyle = '#38bdf8'; context.beginPath(); context.arc(15.5, -37, 5, 0, Math.PI*2); context.fill();
     } else if (type === 'ninja') {
-        // Dark Mask
         context.fillStyle = '#171717'; context.fillRect(-9, -39, 18, 14);
-        context.fillStyle = skin.color; context.fillRect(-5, -35, 10, 4); // Skin showing
-        context.fillStyle = '#000'; context.fillRect(-3, -34, 2, 2); context.fillRect(1, -34, 2, 2); // Eyes again
-        // Red Headband
+        context.fillStyle = skin.color; context.fillRect(-5, -35, 10, 4);
+        context.fillStyle = '#000'; context.fillRect(-3, -34, 2, 2); context.fillRect(1, -34, 2, 2);
         context.fillStyle = '#dc2626'; context.fillRect(-14, -37, 6, 3); context.fillRect(-12, -33, 4, 3);
     } else if (type === 'archer') {
-        // Green Hood
         context.fillStyle = '#166534'; context.fillRect(-10, -40, 20, 12);
-        // Bow
         context.strokeStyle = '#78350f'; context.lineWidth = 3; context.beginPath(); context.arc(16, -20, 10, -Math.PI/2, Math.PI/2); context.stroke();
     } else if (type === 'chef') {
-        // Tall Chef Hat
-        context.fillStyle = '#ffffff';
-        context.beginPath(); context.arc(-5, -42, 6, 0, Math.PI*2); context.arc(5, -42, 6, 0, Math.PI*2); context.arc(0, -48, 8, 0, Math.PI*2); context.fill();
-        context.fillRect(-8, -42, 16, 5);
-        // White Apron
+        context.fillStyle = '#ffffff'; context.beginPath(); context.arc(-5, -42, 6, 0, Math.PI*2); context.arc(5, -42, 6, 0, Math.PI*2); context.arc(0, -48, 8, 0, Math.PI*2); context.fill(); context.fillRect(-8, -42, 16, 5);
         context.fillStyle = '#ffffff'; context.fillRect(-6, -20, 12, 14);
     } else if (type === 'pink') {
-        // Big Pink Bow on Head
-        context.fillStyle = '#be185d';
-        context.beginPath(); context.moveTo(0, -42); context.lineTo(-10, -48); context.lineTo(-10, -36); context.fill();
-        context.beginPath(); context.moveTo(0, -42); context.lineTo(10, -48); context.lineTo(10, -36); context.fill();
-        context.beginPath(); context.arc(0, -42, 4, 0, Math.PI*2); context.fill();
+        context.fillStyle = '#be185d'; context.beginPath(); context.moveTo(0, -42); context.lineTo(-10, -48); context.lineTo(-10, -36); context.fill(); context.beginPath(); context.moveTo(0, -42); context.lineTo(10, -48); context.lineTo(10, -36); context.fill(); context.beginPath(); context.arc(0, -42, 4, 0, Math.PI*2); context.fill();
     } else if (type === 'gent') {
-        // Top Hat
         context.fillStyle = '#171717'; context.fillRect(-12, -38, 24, 3); context.fillRect(-7, -50, 14, 12);
-        // Monocle
         context.strokeStyle = '#fbbf24'; context.lineWidth = 1.5; context.beginPath(); context.arc(3.5, -32.5, 3.5, 0, Math.PI*2); context.stroke();
-        // Red Bowtie
         context.fillStyle = '#dc2626'; context.beginPath(); context.moveTo(0, -25); context.lineTo(-5, -28); context.lineTo(-5, -22); context.fill(); context.beginPath(); context.moveTo(0, -25); context.lineTo(5, -28); context.lineTo(5, -22); context.fill();
     } else if (type === 'rapper') {
-        // Backwards Cap
         context.fillStyle = '#ef4444'; context.fillRect(-8, -43, 16, 6); context.fillRect(-14, -40, 6, 3);
-        // Sunglasses
         context.fillStyle = '#000000'; context.fillRect(-7, -35, 14, 5);
-        // Gold Chain
         context.strokeStyle = '#fbbf24'; context.lineWidth = 2.5; context.beginPath(); context.moveTo(-6, -26); context.lineTo(0, -18); context.lineTo(6, -26); context.stroke();
     } else if (type === 'builder') {
-        // Yellow Hard Hat
         context.fillStyle = '#facc15'; context.beginPath(); context.arc(0, -38, 9, Math.PI, 0); context.fill(); context.fillRect(-11, -39, 22, 3);
-        // Orange Safety Vest
         context.fillStyle = '#ea580c'; context.fillRect(-9, -26, 4, 12); context.fillRect(5, -26, 4, 12); context.fillRect(-9, -17, 18, 4);
     }
-
     context.restore();
 }
 
@@ -277,18 +225,9 @@ function renderShop() {
     SKINS.forEach(skin => {
         const isUnlocked = unlockedSkins.includes(skin.id);
         const isEquipped = equippedSkin.id === skin.id;
-        
         const card = document.createElement('div');
         card.className = `shop-card ${isEquipped ? 'selected' : ''}`;
-        
-        // Instead of a colored div, we use a real canvas to draw the advanced character!
-        card.innerHTML = `
-            <h4>${skin.name}</h4>
-            <canvas id="preview-${skin.id}" width="60" height="70" style="margin: 0 auto; display: block;"></canvas>
-            <p>${isUnlocked ? 'Owned' : '🪙 ' + skin.cost}</p>
-            <button ${isEquipped ? 'disabled' : ''}>${isEquipped ? 'Equipped' : isUnlocked ? 'Equip' : 'Buy'}</button>
-        `;
-        
+        card.innerHTML = `<h4>${skin.name}</h4><canvas id="preview-${skin.id}" width="60" height="70" style="margin: 0 auto; display: block;"></canvas><p>${isUnlocked ? 'Owned' : '🪙 ' + skin.cost}</p><button ${isEquipped ? 'disabled' : ''}>${isEquipped ? 'Equipped' : isUnlocked ? 'Equip' : 'Buy'}</button>`;
         card.querySelector('button').onclick = () => {
             if (isUnlocked) equippedSkin = skin;
             else if (coins >= skin.cost) { coins -= skin.cost; unlockedSkins.push(skin.id); equippedSkin = skin; }
@@ -296,57 +235,66 @@ function renderShop() {
         };
         shopItemsContainer.appendChild(card);
     });
-
-    // Draw the characters onto the shop canvases after they are added to the DOM
     SKINS.forEach(skin => {
         const previewCanvas = document.getElementById(`preview-${skin.id}`);
-        if(previewCanvas) {
-            const pCtx = previewCanvas.getContext('2d');
-            // Draw character in the center of the 60x70 canvas, scaled up slightly
-            drawAdvancedCharacter(pCtx, 30, 60, skin, true, 1.2, 1.2);
-        }
+        if(previewCanvas) drawAdvancedCharacter(previewCanvas.getContext('2d'), 30, 60, skin, true, 1.2, 1.2);
     });
-
     coinCounterUI.innerText = `🪙 ${coins}`;
 }
 
+// Particle System
+function spawnParticles(x, y, color, count, speed) {
+    for(let i=0; i<count; i++) {
+        particles.push({ x, y, vx: (Math.random()-0.5)*speed, vy: (Math.random()-0.5)*speed - 2, life: 1, color, size: Math.random()*4 + 2 });
+    }
+}
 
-// EASIER LEVELS
+// 🔥 ADVANCED LEVEL DESIGN
 function loadLevel(levelNum) {
-    platforms = []; hazards = []; coinsList = []; checkpointsList = [];
+    platforms = []; spikes = []; lavas = []; bouncePads = []; coinsList = []; checkpointsList = []; particles = [];
     checkpoint = { x: 50, y: 350 };
     player.x = checkpoint.x; player.y = checkpoint.y; player.vx = 0; player.vy = 0;
-    cameraX = 0;
+    cameraX = 0; bgTimer = 0;
     currentTheme = THEMES[(levelNum - 1) % THEMES.length];
     
     levelTitleUI.innerText = `Stage ${levelNum} / 15`;
     themeNameUI.innerText = `Theme: ${currentTheme.name}`;
 
     const addP = (x, y, w, h) => platforms.push({ x, y, w, h });
+    const addS = (x, y, count) => spikes.push({ x, y, w: count*20, h: 20, count });
+    const addL = (x, y, w, h) => lavas.push({ x, y, w, h });
+    const addB = (x, y, w) => bouncePads.push({ x, y, w, h: 15 });
     const addC = (x, y) => checkpointsList.push({ x, y, w: 20, h: 30, reached: false });
     const addCoin = (x, y) => coinsList.push({ x, y, collected: false });
 
-    // Base start platform
-    addP(20, 400, 160, 200); 
-
-    let cx = 0; let cy = 0;
-    
     if(levelNum === 1) {
-        addP(220, 400, 160, 200); addCoin(300, 360);
-        addP(420, 360, 160, 200); addC(480, 330);
-        addP(620, 360, 160, 200);
-        addP(820, 380, 160, 200);
-        cx = 1050; cy = 400;
+        addP(20, 400, 160, 200); 
+        addP(250, 400, 160, 200); addS(300, 380, 2); // Introduce Spikes
+        addP(500, 400, 100, 200); addB(525, 385, 50); // Introduce Bounce
+        addP(750, 200, 100, 400); addC(780, 170); // Checkpoint up high
+        addP(950, 350, 120, 200); addCoin(1000, 310);
+        addP(1150, 400, 150, 200); addS(1150, 380, 3);
+        
+        addP(1400, 380, 150, 200); exitDoor = { x: 1450, y: 315, w: 45, h: 65 };
     } else {
-        addP(250, 400, 150, 200); 
-        addP(450, 350, 150, 200); addC(500, 320);
-        addP(700, 350, 150, 200);
-        addP(950, 380, 150, 200);
-        cx = 1200; cy = 380;
+        // Level 2: Introduce Lava
+        addP(20, 400, 120, 200);
+        addL(140, 450, 300, 150); // Lava pit
+        addP(200, 350, 60, 20); addP(320, 300, 60, 20); // Small floating platforms
+        addP(440, 400, 120, 200); addC(480, 370);
+        
+        addL(560, 450, 400, 150);
+        addP(620, 350, 60, 20); addB(625, 335, 50);
+        addP(800, 150, 80, 20); addCoin(830, 110); addS(820, 130, 2);
+        
+        addP(1000, 380, 150, 200); exitDoor = { x: 1050, y: 315, w: 45, h: 65 };
     }
+}
 
-    addP(cx, cy, 180, 200); // Big end platform
-    exitDoor = { x: cx + 80, y: cy - 65, w: 45, h: 65 };
+function die() {
+    spawnParticles(player.x + 14, player.y + 19, equippedSkin.color, 30, 15);
+    deaths++; deathCounterUI.innerText = `☠️ ${deaths}`;
+    player.x = checkpoint.x; player.y = checkpoint.y; player.vx = 0; player.vy = 0;
 }
 
 function triggerJump() {
@@ -354,7 +302,8 @@ function triggerJump() {
         player.vy = player.jumpForce;
         player.jumpsLeft--;
         player.grounded = false;
-        player.scaleX = 0.8; player.scaleY = 1.2;
+        player.scaleX = 0.7; player.scaleY = 1.3;
+        spawnParticles(player.x + 14, player.y + 38, '#ffffff', 5, 5);
     }
 }
 
@@ -364,7 +313,6 @@ window.addEventListener('keydown', (e) => {
 });
 window.addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
 
-// Mobile Controls
 const attachBtn = (id, key) => {
     const el = document.getElementById(id);
     if(!el) return;
@@ -372,9 +320,7 @@ const attachBtn = (id, key) => {
     el.addEventListener('pointerup', (e) => { e.preventDefault(); keys[key] = false; });
     el.addEventListener('pointercancel', (e) => { e.preventDefault(); keys[key] = false; });
 };
-attachBtn('btn-left', 'arrowleft');
-attachBtn('btn-right', 'arrowright');
-attachBtn('btn-jump', 'space');
+attachBtn('btn-left', 'arrowleft'); attachBtn('btn-right', 'arrowright'); attachBtn('btn-jump', 'space');
 
 function update() {
     if (isPaused) return;
@@ -385,76 +331,147 @@ function update() {
     player.vy += GRAVITY; player.vx *= FRICTION;
     player.x += player.vx; player.y += player.vy;
 
-    player.scaleX += (1 - player.scaleX) * 0.15;
-    player.scaleY += (1 - player.scaleY) * 0.15;
+    player.scaleX += (1 - player.scaleX) * 0.15; player.scaleY += (1 - player.scaleY) * 0.15;
 
     let targetCameraX = player.x - (canvas.width / 3);
     cameraX += (targetCameraX - cameraX) * 0.1;
     if (cameraX < 0) cameraX = 0;
 
+    // Platform Collision
     player.grounded = false;
     platforms.forEach(p => {
         if (player.x + player.width > p.x && player.x < p.x + p.w) {
-            if (player.y + player.height >= p.y && player.y + player.height <= p.y + 20 && player.vy >= 0) {
-                player.y = p.y - player.height;
-                player.vy = 0;
-                player.grounded = true;
-                player.jumpsLeft = player.maxJumps;
+            // Landing on top
+            if (player.y + player.height >= p.y && player.y + player.height <= p.y + 25 && player.vy >= 0) {
+                if(!player.grounded && player.vy > 5) spawnParticles(player.x+14, p.y, '#94a3b8', 5, 3); // Dust
+                player.y = p.y - player.height; player.vy = 0; player.grounded = true; player.jumpsLeft = player.maxJumps;
             }
         }
     });
 
+    // Bounce Pads Collision
+    bouncePads.forEach(b => {
+        if (player.x + player.width > b.x && player.x < b.x + b.w && player.y + player.height >= b.y && player.y + player.height <= b.y + 20 && player.vy >= 0) {
+            player.y = b.y - player.height; 
+            player.vy = -17; // Massive bounce!
+            player.jumpsLeft = player.maxJumps;
+            player.scaleX = 0.5; player.scaleY = 1.6;
+            spawnParticles(player.x+14, b.y, '#4ade80', 15, 8);
+        }
+    });
+
+    // Hazard Collisions
+    const pxCenter = player.x + player.width/2; const pyCenter = player.y + player.height/2;
+    spikes.forEach(s => {
+        if (pxCenter > s.x && pxCenter < s.x + s.w && player.y + player.height > s.y + 5) die();
+    });
+    lavas.forEach(l => {
+        if (pxCenter > l.x && pxCenter < l.x + l.w && player.y + player.height > l.y + 10) die();
+    });
+    if (player.y > canvas.height + 200) die(); // Fell into abyss
+
+    // Checkpoints & Collectibles
     checkpointsList.forEach(cp => {
         if (!cp.reached && player.x + player.width > cp.x && player.x < cp.x + cp.w && player.y + player.height > cp.y && player.y < cp.y + cp.h) {
             cp.reached = true; checkpoint = { x: cp.x + 4, y: cp.y + cp.h - player.height - 2 };
+            spawnParticles(cp.x+10, cp.y, '#22c55e', 20, 6);
         }
     });
-
     coinsList.forEach(c => {
         if (!c.collected && Math.hypot((player.x + 14) - c.x, (player.y + 19) - c.y) < 25) {
             c.collected = true; coins++; saveProgress(); coinCounterUI.innerText = `🪙 ${coins}`;
+            spawnParticles(c.x, c.y, '#facc15', 15, 6);
         }
     });
 
-    if (player.y > canvas.height + 100) {
-        deaths++; deathCounterUI.innerText = `☠️ ${deaths}`;
-        player.x = checkpoint.x; player.y = checkpoint.y; player.vx = 0; player.vy = 0;
-    }
-
-    if (player.x + player.width > exitDoor.x && player.x < exitDoor.x + exitDoor.w &&
-        player.y + player.height > exitDoor.y && player.y < exitDoor.y + exitDoor.h) {
+    // Level Complete
+    if (player.x + player.width > exitDoor.x && player.x < exitDoor.x + exitDoor.w && player.y + player.height > exitDoor.y && player.y < exitDoor.y + exitDoor.h) {
         currentLevel++; loadLevel(currentLevel);
     }
+
+    // Update Particles
+    particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.2; p.life -= 0.03; });
+    particles = particles.filter(p => p.life > 0);
 }
 
 function draw() {
-    bgTimer += 0.02;
+    bgTimer += 0.03;
+    
+    // Background gradient
     let skyGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-    skyGrad.addColorStop(0, currentTheme.sky[0]); skyGrad.addColorStop(1, currentTheme.sky[1]);
+    skyGrad.addColorStop(0, currentTheme.sky[0]); skyGrad.addColorStop(0.5, currentTheme.sky[1]); skyGrad.addColorStop(1, currentTheme.sky[2]);
     ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Animated Synthwave Grid Background
+    ctx.save();
+    ctx.strokeStyle = currentTheme.grid; ctx.lineWidth = 1; ctx.globalAlpha = 0.3;
+    let gridOffset = (cameraX * 0.2) % 50;
+    for(let i = -50; i < canvas.width + 50; i += 50) { ctx.beginPath(); ctx.moveTo(i - gridOffset, 0); ctx.lineTo(i - gridOffset, canvas.height); ctx.stroke(); }
+    for(let i = 0; i < canvas.height; i += 50) { ctx.beginPath(); ctx.moveTo(0, i + (bgTimer*20)%50); ctx.lineTo(canvas.width, i + (bgTimer*20)%50); ctx.stroke(); }
+    ctx.restore();
 
     ctx.save(); ctx.translate(-Math.floor(cameraX), 0);
     
+    // Draw Platforms
     platforms.forEach(p => {
-        ctx.fillStyle = currentTheme.platform; ctx.fillRect(p.x, p.y, p.w, p.h);
+        ctx.fillStyle = currentTheme.platform; ctx.fillRect(p.x, p.y, p.w, 10);
         ctx.fillStyle = currentTheme.base; ctx.fillRect(p.x, p.y + 10, p.w, p.h - 10);
     });
 
+    // Draw Spikes (Glowing)
+    ctx.shadowBlur = 10; ctx.shadowColor = '#ef4444'; ctx.fillStyle = '#dc2626';
+    spikes.forEach(s => {
+        for(let i=0; i<s.count; i++) {
+            ctx.beginPath(); ctx.moveTo(s.x + (i*20) + 10, s.y); ctx.lineTo(s.x + (i*20) + 20, s.y + 20); ctx.lineTo(s.x + (i*20), s.y + 20); ctx.fill();
+        }
+    });
+    ctx.shadowBlur = 0;
+
+    // Draw Lava (Animated waves)
+    ctx.fillStyle = '#ea580c'; ctx.shadowBlur = 15; ctx.shadowColor = '#f97316';
+    lavas.forEach(l => {
+        ctx.beginPath(); ctx.moveTo(l.x, l.y + l.h); ctx.lineTo(l.x, l.y + 5);
+        for(let i=0; i<=l.w; i+=20) { ctx.lineTo(l.x + i, l.y + 5 + Math.sin(bgTimer*3 + i*0.1)*5); }
+        ctx.lineTo(l.x + l.w, l.y + l.h); ctx.fill();
+        ctx.fillStyle = '#c2410c'; ctx.fillRect(l.x, l.y+15, l.w, l.h-15); ctx.fillStyle = '#ea580c';
+    });
+    ctx.shadowBlur = 0;
+
+    // Draw Bounce Pads
+    bouncePads.forEach(b => {
+        ctx.fillStyle = '#334155'; ctx.fillRect(b.x, b.y+5, b.w, b.h-5); // Base
+        ctx.fillStyle = '#4ade80'; ctx.shadowBlur = 15; ctx.shadowColor = '#22c55e'; // Glowing top
+        ctx.fillRect(b.x, b.y + Math.sin(bgTimer*8)*2, b.w, 5); 
+        ctx.shadowBlur = 0;
+    });
+
+    // Checkpoints
     checkpointsList.forEach(cp => {
         ctx.fillStyle = '#64748b'; ctx.fillRect(cp.x, cp.y, 4, cp.h);
         ctx.fillStyle = cp.reached ? '#22c55e' : '#cbd5e1';
         ctx.beginPath(); ctx.moveTo(cp.x + 4, cp.y); ctx.lineTo(cp.x + 20, cp.y + 5); ctx.lineTo(cp.x + 4, cp.y + 12); ctx.fill();
     });
 
+    // Coins (Glowing and bobbing)
+    ctx.shadowBlur = 15; ctx.shadowColor = '#fde047'; ctx.fillStyle = '#facc15';
     coinsList.forEach(c => {
-        if (!c.collected) {
-            ctx.fillStyle = '#facc15'; ctx.beginPath(); ctx.arc(c.x, c.y + Math.sin(bgTimer*5)*3, 8, 0, Math.PI * 2); ctx.fill();
-        }
+        if (!c.collected) { ctx.beginPath(); ctx.arc(c.x, c.y + Math.sin(bgTimer*5)*4, 8, 0, Math.PI * 2); ctx.fill(); }
     });
+    ctx.shadowBlur = 0;
 
-    ctx.fillStyle = '#f59e0b'; ctx.fillRect(exitDoor.x, exitDoor.y, exitDoor.w, exitDoor.h);
+    // Exit Door
+    ctx.fillStyle = '#f59e0b'; ctx.shadowBlur = 20; ctx.shadowColor = '#fbbf24';
+    ctx.fillRect(exitDoor.x, exitDoor.y, exitDoor.w, exitDoor.h);
+    ctx.shadowBlur = 0;
     
-    // Call our new advanced rendering function during gameplay!
+    // Draw Particles
+    particles.forEach(p => {
+        ctx.fillStyle = p.color; ctx.globalAlpha = p.life;
+        ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI*2); ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    // Character
     drawAdvancedCharacter(ctx, player.x + 14, player.y + 38, equippedSkin, player.facingRight, player.scaleX, player.scaleY);
     
     ctx.restore();
@@ -462,10 +479,7 @@ function draw() {
 
 function gameLoop() { update(); draw(); requestAnimationFrame(gameLoop); }
 
-loadProgress();
-coinCounterUI.innerText = `🪙 ${coins}`;
-loadLevel(currentLevel);
-gameLoop();
+loadProgress(); coinCounterUI.innerText = `🪙 ${coins}`; loadLevel(currentLevel); gameLoop();
 
 </script>
 </body>
