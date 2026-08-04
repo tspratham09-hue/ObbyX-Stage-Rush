@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Obby Stage Rush - No Spikes, New Mechanics!</title>
+    <title>Obby Stage Rush - Perfected</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #0f172a; color: white; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -247,7 +247,7 @@ function spawnParticles(x, y, color, count, speed) {
     }
 }
 
-// 🚧 REWORKED LEVEL DESIGN (No Spikes, New Obstacles)
+// 🚧 PERFECTED LEVEL DESIGN
 function loadLevel(levelNum) {
     platforms = []; lavas = []; bouncePads = []; coinsList = []; checkpointsList = []; particles = []; 
     movingPlatforms = []; fragilePlatforms = [];
@@ -287,26 +287,30 @@ function loadLevel(levelNum) {
         addP(800, 150, 80, 20); addCoin(830, 110); 
         addP(1000, 380, 150, 200); exitDoor = { x: 1050, y: 315, w: 45, h: 65 };
     } else {
-        // Stage 3: Introducing Moving & Fragile Platforms
+        // Stage 3: Perfectly Balanced Fixed Level
         addP(20, 400, 120, 200);
-        addL(140, 450, 400, 150);
+        addL(140, 450, 360, 150);
         
         // Moving Platform across lava
-        addMP(180, 380, 80, 20, 1.5, 0, 250); 
+        addMP(180, 380, 80, 20, 1.5, 0, 240); 
         
-        addP(540, 400, 100, 200); addC(580, 370);
-        addL(640, 450, 500, 150);
+        addP(500, 400, 100, 200); addC(540, 370);
+        addL(600, 450, 750, 150);
         
         // Fragile Platforms sequence
-        addFP(680, 350, 60); 
-        addFP(780, 300, 60);
-        addFP(880, 250, 60);
-        addCoin(895, 200);
+        addFP(650, 350, 60); 
+        addFP(760, 300, 60);
+        addFP(870, 250, 60);
+        addCoin(885, 200);
         
-        // Vertical Moving Platform
-        addMP(1000, 300, 80, 20, 0, 2, 200);
+        // SAFE PLATFORM (Fixes the impossible waiting issue)
+        addP(980, 250, 60, 250);
 
-        addP(1150, 100, 150, 500); exitDoor = { x: 1200, y: 35, w: 45, h: 65 };
+        // Vertical Moving Platform (Now starts at the safe platform and moves UP)
+        addMP(1080, 250, 80, 20, 0, -2, 150);
+
+        // Final Platform & Exit Door
+        addP(1200, 100, 150, 500); exitDoor = { x: 1250, y: 35, w: 45, h: 65 };
     }
 }
 
