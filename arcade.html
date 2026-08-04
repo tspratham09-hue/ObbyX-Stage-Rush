@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nature Adventure - Choose Your Game</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ArcadeVerse - Choose Your Game</title>
     <style>
         body {
             margin: 0;
@@ -18,12 +18,17 @@
             font-family: 'Courier New', Courier, monospace;
             touch-action: manipulation;
         }
+        
+        /* NEW: Added max-width and max-height to scale properly on mobile */
         canvas {
             background: linear-gradient(to bottom, #87CEEB, #E0F6FF);
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             border-radius: 8px;
+            max-width: 95vw;  /* Prevents horizontal overflow */
+            max-height: 60vh; /* Leaves room for buttons at the bottom */
+            object-fit: contain;
         }
-        /* On-screen control buttons for mobile/click users */
+
         .controls-container {
             display: none;
             margin-top: 15px;
@@ -53,8 +58,6 @@
     </style>
 </head>
 <body>
-
-<a href="index.html" style="position: absolute; top: 15px; left: 15px; color: white; font-weight: bold; text-decoration: none; font-size: 14px; background: #ef4444; padding: 6px 12px; border-radius: 4px; font-family: sans-serif; z-index: 100;">⬅ Arena Hub</a>
 
 <canvas id="gameCanvas" width="800" height="400"></canvas>
 
@@ -128,11 +131,10 @@
         } catch (e) {}
     }
 
-    // Game States: 'menu', 'dino_playing', 'snake_playing', 'gameover'
     let gameState = 'menu';
-
     let score = 0;
     let highScore = 0;
+    let gameSpeed = 5;
 
     // Player for Dino Runner Game
     const player = {
@@ -151,7 +153,7 @@
         y: 295,
         width: 35,
         height: 45,
-        speed: 4 // Changed from 6 to 4 (Starts SLOW)
+        speed: 6
     };
 
     // Snake Game Variables
@@ -161,7 +163,7 @@
     let dy = 0;
     let food = { x: 0, y: 0 };
     let snakeTimer = 0;
-    let snakeSpeedThreshold = 12; // Changed from const 7 to let 12 (Higher number = Slower)
+    const snakeSpeedThreshold = 7;
 
     function resetSnakeGame() {
         snake = [
@@ -172,7 +174,6 @@
         dx = gridSize;
         dy = 0;
         score = 0;
-        snakeSpeedThreshold = 12; // Reset to SLOW on restart
         spawnFood();
     }
 
@@ -181,14 +182,12 @@
         food.y = Math.floor(Math.random() * (canvas.height / gridSize)) * gridSize;
     }
 
-    // Mountain Background layers
     let mountains = [
         { x: 0, y: 180, width: 400, height: 150, speed: 1 },
         { x: 350, y: 160, width: 450, height: 170, speed: 1 },
         { x: 750, y: 180, width: 400, height: 150, speed: 1 }
     ];
 
-    // Direction change helper for snake
     function changeSnakeDirection(newDx, newDy) {
         if (newDx === -gridSize && dx === 0) { dx = -gridSize; dy = 0; }
         else if (newDx === gridSize && dx === 0) { dx = gridSize; dy = 0; }
@@ -196,25 +195,31 @@
         else if (newDy === gridSize && dy === 0) { dx = 0; dy = gridSize; }
     }
 
-    // Button controls setup
     document.getElementById("btnUp").addEventListener("click", () => { initAudio(); if(gameState==='snake_playing') changeSnakeDirection(0, -gridSize); });
     document.getElementById("btnDown").addEventListener("click", () => { initAudio(); if(gameState==='snake_playing') changeSnakeDirection(0, gridSize); });
     document.getElementById("btnLeft").addEventListener("click", () => { initAudio(); if(gameState==='snake_playing') changeSnakeDirection(-gridSize, 0); });
     document.getElementById("btnRight").addEventListener("click", () => { initAudio(); if(gameState==='snake_playing') changeSnakeDirection(gridSize, 0); });
 
-    // Input & Mouse Click Handling
+    // NEW: Updated Click Event to handle Mobile Scaling Accurately
     canvas.addEventListener("click", function(e) {
         initAudio();
         const rect = canvas.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
+        
+        // Calculate the scale factor between the actual canvas size and the CSS scaled size
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+
+        // Apply scale factor to mouse/tap coordinates
+        const mouseX = (e.clientX - rect.left) * scaleX;
+        const mouseY = (e.clientY - rect.top) * scaleY;
 
         if (gameState === 'menu') {
             // Click Dino Game Button
             if (mouseX >= 180 && mouseX <= 380 && mouseY >= 220 && mouseY <= 280) {
                 score = 0;
+                gameSpeed = 5;
                 obstacle.x = 800;
-                obstacle.speed = 4; // Start SLOW
+                obstacle.speed = 6;
                 player.y = 280;
                 player.vy = 0;
                 player.isGrounded = true;
@@ -239,7 +244,6 @@
         }
     });
 
-    // Keyboard controls
     window.addEventListener("keydown", function(e) {
         initAudio();
         if (gameState === 'dino_playing') {
@@ -367,17 +371,14 @@
             }
 
             obstacle.x -= obstacle.speed;
-            
             if (obstacle.x < -50) {
                 obstacle.x = canvas.width + Math.random() * 100;
                 score += 10;
                 playSound('score');
                 if (score > highScore) highScore = score;
-
-                // DINO DIFFICULTY PROGRESSION
-                if (score === 50) obstacle.speed = 5.5; // MEDIUM
-                else if (score === 100) obstacle.speed = 7.5; // FAST
-                else if (score > 100 && score % 50 === 0) obstacle.speed += 0.5; // VERY FAST
+                if (score % 50 === 0) {
+                    obstacle.speed += 0.5;
+                }
             }
 
             if (
@@ -420,11 +421,6 @@
                     playSound('eat');
                     if (score > highScore) highScore = score;
                     spawnFood();
-
-                    // SNAKE DIFFICULTY PROGRESSION
-                    if (score === 50) snakeSpeedThreshold = 9; // MEDIUM (Lower threshold = faster)
-                    else if (score === 100) snakeSpeedThreshold = 6; // FAST
-                    else if (score > 100 && score % 50 === 0 && snakeSpeedThreshold > 4) snakeSpeedThreshold -= 1; // VERY FAST
                 } else {
                     snake.pop();
                 }
@@ -505,7 +501,7 @@
 
             ctx.font = "16px 'Courier New'";
             ctx.fillStyle = "#FFD700";
-            ctx.fillText("Click or Press Space to return to Menu", canvas.width / 2, canvas.height / 2 + 45);
+            ctx.fillText("Tap or Press Space to return", canvas.width / 2, canvas.height / 2 + 45);
             ctx.textAlign = "left";
         }
     }
