@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Obby Stage Rush - Advanced Stages</title>
+    <title>Obby Stage Rush - 15 Stages</title>
     <style>
         * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: #0f172a; color: white; overflow: hidden; display: flex; justify-content: center; align-items: center; height: 100vh; }
@@ -62,7 +62,7 @@
     <canvas id="gameCanvas"></canvas>
     <div id="ui-layer">
         <div class="ui-box" id="top-left">
-            <h2 id="level-title">Stage 1 / 5</h2>
+            <h2 id="level-title">Stage 1 / 15</h2>
             <p id="theme-name">Theme: Neon Synthwave</p>
         </div>
         <div class="ui-box" id="top-center">
@@ -123,7 +123,7 @@ const player = {
 };
 const GRAVITY = 0.55; 
 const BASE_FRICTION = 0.82; 
-const ICE_FRICTION = 0.97; // Ice makes it hard to stop
+const ICE_FRICTION = 0.97; 
 
 let checkpoint = { x: 50, y: 350 };
 let keys = {};
@@ -134,11 +134,21 @@ let cameraX = 0; let bgTimer = 0;
 let bgScenery = []; 
 
 const THEMES = [
-    { id: 'neon', name: "Neon Synthwave", sky: ["#0f0c29", "#302b63", "#24243e"], platform: "#0ea5e9", base: "#0284c7", danger: "#dc2626", scenery: 'mountains' }, 
-    { id: 'lava', name: "Volcano Core", sky: ["#2a0800", "#5c1000", "#1f0400"], platform: "#27272a", base: "#18181b", danger: "#ea580c", scenery: 'volcanoes' },
-    { id: 'toxic', name: "Toxic Crumble", sky: ["#022c22", "#064e3b", "#065f46"], platform: "#4ade80", base: "#166534", danger: "#84cc16", scenery: 'spores' },
-    { id: 'ice', name: "Slippery Slopes", sky: ["#082f49", "#0c4a6e", "#0284c7"], platform: "#bae6fd", base: "#38bdf8", danger: "#000000", scenery: 'icebergs' },
-    { id: 'cyber', name: "The Factory", sky: ["#2e1065", "#4c1d95", "#3b0764"], platform: "#94a3b8", base: "#475569", danger: "#d946ef", scenery: 'city' }
+    { id: 'neon', name: "1. Neon Synthwave", sky: ["#0f0c29", "#302b63", "#24243e"], platform: "#0ea5e9", base: "#0284c7", danger: "#dc2626" }, 
+    { id: 'lava', name: "2. Volcano Core", sky: ["#2a0800", "#5c1000", "#1f0400"], platform: "#27272a", base: "#18181b", danger: "#ea580c" },
+    { id: 'toxic', name: "3. Toxic Crumble", sky: ["#022c22", "#064e3b", "#065f46"], platform: "#4ade80", base: "#166534", danger: "#84cc16" },
+    { id: 'ice', name: "4. Slippery Slopes", sky: ["#082f49", "#0c4a6e", "#0284c7"], platform: "#bae6fd", base: "#38bdf8", danger: "#000000" },
+    { id: 'cyber', name: "5. The Factory", sky: ["#2e1065", "#4c1d95", "#3b0764"], platform: "#94a3b8", base: "#475569", danger: "#d946ef" },
+    { id: 'bounce', name: "6. Trampoline Park", sky: ["#4a044e", "#701a75", "#831843"], platform: "#f472b6", base: "#db2777", danger: "#e11d48" },
+    { id: 'elevator', name: "7. Elevator Shaft", sky: ["#171717", "#262626", "#404040"], platform: "#fbbf24", base: "#d97706", danger: "#dc2626" },
+    { id: 'treadmill', name: "8. The Treadmill", sky: ["#1e3a8a", "#1e40af", "#1d4ed8"], platform: "#64748b", base: "#475569", danger: "#ef4444" },
+    { id: 'faith', name: "9. Leap of Faith", sky: ["#000000", "#111827", "#1f2937"], platform: "#34d399", base: "#059669", danger: "#b91c1c" },
+    { id: 'ocean', name: "10. Boiling Ocean", sky: ["#7f1d1d", "#991b1b", "#b91c1c"], platform: "#14b8a6", base: "#0f766e", danger: "#f97316" },
+    { id: 'stairs', name: "11. Fragile Stairs", sky: ["#14532d", "#166534", "#15803d"], platform: "#a3e635", base: "#65a30d", danger: "#b91c1c" },
+    { id: 'chaos', name: "12. Conveyor Chaos", sky: ["#312e81", "#3730a3", "#4338ca"], platform: "#c084fc", base: "#9333ea", danger: "#fb923c" },
+    { id: 'icesky', name: "13. Ice Skyscraper", sky: ["#0c4a6e", "#0369a1", "#0284c7"], platform: "#e0f2fe", base: "#7dd3fc", danger: "#1e1b4b" },
+    { id: 'gauntlet', name: "14. The Gauntlet", sky: ["#27272a", "#3f3f46", "#52525b"], platform: "#f87171", base: "#dc2626", danger: "#991b1b" },
+    { id: 'victory', name: "15. Victory Road", sky: ["#422006", "#713f12", "#a16207"], platform: "#fef08a", base: "#eab308", danger: "#ffffff" }
 ];
 let currentTheme = THEMES[0];
 
@@ -196,15 +206,15 @@ function generateBackgroundScenery() {
     }
 }
 
-// 🚧 STAGE CREATION LOGIC
+// 15 STAGES
 function loadLevel(levelNum) {
     platforms = []; lavas = []; bouncePads = []; coinsList = []; checkpointsList = []; particles = []; movingPlatforms = []; fragilePlatforms = []; conveyors = [];
     checkpoint = { x: 50, y: 350 };
     player.x = checkpoint.x; player.y = checkpoint.y; player.vx = 0; player.vy = 0; cameraX = 0; bgTimer = 0;
     
     currentTheme = THEMES[(levelNum - 1) % THEMES.length];
-    levelTitleUI.innerText = `Stage ${levelNum} / 5`;
-    themeNameUI.innerText = `Theme: ${currentTheme.name}`;
+    levelTitleUI.innerText = `Stage ${levelNum} / 15`;
+    themeNameUI.innerText = `${currentTheme.name}`;
     generateBackgroundScenery();
 
     const addP = (x, y, w, h, isIce=false) => platforms.push({ x, y, w, h, isIce });
@@ -216,25 +226,94 @@ function loadLevel(levelNum) {
     const addFP = (x, y, w) => fragilePlatforms.push({ x, y, w, h: 15, active: true, timer: 60, respawnTimer: 0 });
     const addConv = (x, y, w, speed) => conveyors.push({ x, y, w, h: 15, speed });
 
-    if(levelNum === 1) {
+    if(levelNum === 1) { // Neon Synthwave
         addP(20, 400, 160, 200); addP(300, 400, 160, 200); addP(600, 400, 100, 200); addB(625, 385, 50); 
         addP(800, 150, 100, 400); addC(830, 120); addCoin(950, 80); addP(1100, 350, 150, 200); exitDoor = { x: 1150, y: 285, w: 45, h: 65 };
-    } else if(levelNum === 2) {
+    } 
+    else if(levelNum === 2) { // Volcano Core
         addP(20, 400, 120, 200); addL(140, 450, 500, 150); addP(200, 350, 60, 20); addP(350, 300, 60, 20); addP(500, 350, 60, 20); 
         addP(640, 400, 100, 200); addC(660, 370); addL(740, 450, 300, 150); addP(850, 300, 60, 20); addCoin(865, 250);
         addP(1040, 400, 150, 200); exitDoor = { x: 1090, y: 335, w: 45, h: 65 };
-    } else if(levelNum === 3) {
+    } 
+    else if(levelNum === 3) { // Toxic Crumble
         addP(20, 400, 120, 200); addL(140, 450, 650, 150); addFP(200, 350, 60); addFP(320, 300, 60); addFP(440, 250, 60); 
         addP(560, 250, 80, 300); addC(580, 220); addMP(700, 250, 80, 20, 1.5, -0.5, 250); addCoin(900, 100);
         addP(1000, 150, 150, 400); exitDoor = { x: 1050, y: 85, w: 45, h: 65 };
-    } else if(levelNum === 4) {
+    } 
+    else if(levelNum === 4) { // Slippery Slopes
         addP(20, 400, 120, 200); addP(200, 400, 200, 200, true); addP(450, 350, 150, 200, true); addL(600, 450, 300, 150); 
         addP(700, 250, 80, 20, true); addCoin(725, 200); addP(900, 400, 200, 200, true); addC(950, 370); addB(1000, 385, 50);
         addP(1150, 150, 150, 400); exitDoor = { x: 1200, y: 85, w: 45, h: 65 };
-    } else {
+    } 
+    else if(levelNum === 5) { // The Factory
         addP(20, 400, 120, 200); addL(140, 450, 800, 150); addConv(200, 350, 150, 2.5); addConv(420, 280, 150, -2.0); 
         addP(620, 250, 80, 200); addC(630, 220); addMP(750, 250, 60, 20, 0, 2, 200); addCoin(765, 400); addConv(850, 400, 200, 3.0); 
         addP(1100, 350, 150, 200); exitDoor = { x: 1150, y: 285, w: 45, h: 65 };
+    }
+    else if(levelNum === 6) { // Trampoline Park
+        addP(20, 400, 100, 200); addL(120, 450, 900, 150);
+        addB(150, 400, 40); addB(250, 300, 40); addB(350, 200, 40); addB(500, 250, 40); addB(650, 350, 40);
+        addP(800, 300, 80, 200); addC(820, 270); addCoin(840, 200); addP(1000, 300, 150, 200); exitDoor = { x: 1050, y: 235, w: 45, h: 65 };
+    }
+    else if(levelNum === 7) { // Elevator Shaft
+        addP(20, 400, 100, 200);
+        addMP(150, 350, 60, 20, 0, -2, 250); addMP(250, 100, 60, 20, 0, 2, 250); addMP(350, 350, 60, 20, 0, -2, 250);
+        addP(450, 100, 80, 20); addC(460, 70); addL(450, 450, 600, 150);
+        addMP(550, 100, 60, 20, 2, 0, 200); addCoin(650, 50); addP(800, 100, 150, 400); exitDoor = { x: 850, y: 35, w: 45, h: 65 };
+    }
+    else if(levelNum === 8) { // The Treadmill
+        addP(20, 400, 80, 200); addConv(100, 400, 800, -3.5); // Massive belt pushing left
+        addL(300, 380, 50, 20); addL(500, 380, 50, 20); addL(700, 380, 50, 20); // Lava ON the treadmill
+        addP(900, 400, 150, 200); addCoin(950, 300); exitDoor = { x: 950, y: 335, w: 45, h: 65 };
+    }
+    else if(levelNum === 9) { // Leap of Faith
+        checkpoint = { x: 50, y: 50 }; player.x = 50; player.y = 50;
+        addP(20, 100, 100, 400); addL(120, 450, 800, 150);
+        addB(150, 400, 40); addB(350, 400, 40); addB(550, 400, 40); addB(750, 400, 40);
+        addP(900, 100, 150, 400); addCoin(950, 50); exitDoor = { x: 950, y: 35, w: 45, h: 65 };
+    }
+    else if(levelNum === 10) { // Boiling Ocean
+        addP(20, 300, 80, 300); addL(100, 400, 1000, 200);
+        addMP(150, 350, 40, 20, 1.5, 0, 150); addMP(350, 250, 40, 20, 0, 2, 100); addMP(450, 350, 40, 20, 2, 1, 100);
+        addP(650, 250, 60, 20); addC(660, 220); addCoin(670, 150);
+        addMP(750, 250, 40, 20, 2, -1, 150); addP(950, 150, 150, 400); exitDoor = { x: 1000, y: 85, w: 45, h: 65 };
+    }
+    else if(levelNum === 11) { // Fragile Stairs
+        addP(20, 400, 100, 200); addL(120, 450, 800, 150);
+        addFP(150, 380, 50); addFP(220, 330, 50); addFP(290, 280, 50); addFP(360, 230, 50); addFP(430, 180, 50);
+        addP(520, 150, 80, 400); addC(530, 120); addCoin(550, 50);
+        addFP(650, 180, 50); addFP(720, 230, 50); addFP(790, 280, 50);
+        addP(880, 330, 150, 250); exitDoor = { x: 930, y: 265, w: 45, h: 65 };
+    }
+    else if(levelNum === 12) { // Conveyor Chaos
+        addP(20, 400, 80, 200); addL(100, 450, 800, 150);
+        addConv(150, 350, 100, 4.0); addConv(300, 280, 100, -4.0); addConv(450, 210, 100, 4.0);
+        addP(600, 200, 80, 400); addC(610, 170); addCoin(630, 100);
+        addConv(750, 300, 150, -5.0); addP(950, 300, 150, 300); exitDoor = { x: 1000, y: 235, w: 45, h: 65 };
+    }
+    else if(levelNum === 13) { // Ice Skyscraper
+        addP(20, 400, 100, 200); addL(120, 450, 800, 150);
+        addP(150, 350, 60, 20, true); addP(250, 250, 60, 20, true); addP(150, 150, 60, 20, true);
+        addP(350, 100, 80, 20, true); addC(360, 70); addCoin(380, 20);
+        addP(500, 150, 60, 20, true); addP(650, 250, 60, 20, true); addP(800, 350, 60, 20, true);
+        addP(950, 400, 150, 200); exitDoor = { x: 1000, y: 335, w: 45, h: 65 };
+    }
+    else if(levelNum === 14) { // The Gauntlet
+        addP(20, 400, 80, 200); addL(100, 450, 1100, 150);
+        addP(120, 350, 60, 20, true); // Ice
+        addConv(220, 300, 100, 3.0); // Conveyor
+        addFP(360, 250, 60); // Fragile
+        addB(460, 350, 40); // Bounce
+        addP(550, 150, 80, 400); addC(560, 120); // Checkpoint
+        addMP(680, 150, 60, 20, 0, 3, 200); // Moving
+        addCoin(700, 400); 
+        addB(750, 400, 40);
+        addP(900, 150, 150, 400); exitDoor = { x: 950, y: 85, w: 45, h: 65 };
+    }
+    else if(levelNum === 15) { // Victory Road
+        addP(20, 400, 100, 200);
+        for(let i=0; i<10; i++) { addCoin(150 + (i*50), 380 - (i*30)); addP(140 + (i*50), 400 - (i*30), 40, 10); }
+        addP(650, 100, 300, 500); exitDoor = { x: 750, y: 35, w: 45, h: 65 };
     }
 }
 
@@ -257,7 +336,6 @@ window.addEventListener('keyup', (e) => keys[e.key.toLowerCase()] = false);
 const attachBtn = (id, key) => { const el = document.getElementById(id); if(!el) return; el.addEventListener('pointerdown', (e) => { e.preventDefault(); initAudio(); keys[key] = true; if(key==='space') triggerJump(); }); el.addEventListener('pointerup', (e) => { e.preventDefault(); keys[key] = false; }); el.addEventListener('pointercancel', (e) => { e.preventDefault(); keys[key] = false; }); };
 attachBtn('btn-left', 'arrowleft'); attachBtn('btn-right', 'arrowright'); attachBtn('btn-jump', 'space');
 
-// FIXED UPDATE FUNCTION
 function update() {
     if (isPaused) return;
 
@@ -275,7 +353,7 @@ function update() {
     if (cameraX < 0) cameraX = 0;
 
     player.grounded = false;
-    player.currentFriction = BASE_FRICTION; // Reset friction each frame
+    player.currentFriction = BASE_FRICTION;
 
     // Standard & Ice Platforms
     platforms.forEach(p => {
@@ -292,7 +370,7 @@ function update() {
         if (player.x + player.width > c.x && player.x < c.x + c.w) {
             if (player.y + player.height >= c.y && player.y + player.height <= c.y + 25 && player.vy >= 0) {
                 player.y = c.y - player.height; player.vy = 0; player.grounded = true; player.jumpsLeft = player.maxJumps;
-                player.x += c.speed; // Move player with belt
+                player.x += c.speed;
             }
         }
     });
@@ -352,7 +430,7 @@ function update() {
 
     // Exit Door
     if (player.x + player.width > exitDoor.x && player.x < exitDoor.x + exitDoor.w && player.y + player.height > exitDoor.y && player.y < exitDoor.y + exitDoor.h) {
-        currentLevel++; if(currentLevel > 5) currentLevel = 1; loadLevel(currentLevel);
+        currentLevel++; if(currentLevel > 15) currentLevel = 1; loadLevel(currentLevel);
     }
 
     particles.forEach(p => { p.x += p.vx; p.y += p.vy; p.vy += 0.2; p.life -= 0.03; });
@@ -366,7 +444,6 @@ function draw() {
     ctx.fillStyle = skyGrad; ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.save();
-    // Parallax background
     ctx.fillStyle = currentTheme.base; ctx.globalAlpha = 0.3;
     bgScenery.forEach(s => { ctx.fillRect(s.x - (cameraX * s.speed), s.y, s.w, s.h); });
     ctx.restore();
