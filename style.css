@@ -196,10 +196,9 @@ button:active { transform: scale(0.95); }
 
 .mobile-btn:active { background: rgba(255, 255, 255, 0.4); }
 
-/* Responsive Adjustments */
-@media (max-width: 768px) {
+/* Updated Media Query for Portrait, Landscape, and Touch Devices */
+@media (max-width: 850px), (max-height: 500px), (pointer: coarse) {
     #mobile-controls { display: flex; }
-    #ui-bar { border-radius: 0; font-size: 12px; }
-    .center-text { font-size: 16px; }
-    #level-grid { grid-template-columns: repeat(3, 1fr); }
+    .btn-row { top: 15px; bottom: auto; right: 15px; }
+    #ui-layer { display: none; } 
 }
